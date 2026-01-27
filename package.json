@@ -5,8 +5,8 @@
   "main": "node_modules/expo-router/entry.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "prebuild": "expo prebuild",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
@@ -14,11 +14,14 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
-    "expo": "^54.0.0",
+    "expo": "~54.0.32",
     "expo-clipboard": "^8.0.8",
+    "expo-dev-client": "~6.0.20",
     "expo-linear-gradient": "^15.0.8",
-    "expo-router": "~6.0.21",
+    "expo-navigation-bar": "~5.0.10",
+    "expo-router": "~6.0.22",
     "expo-status-bar": "~3.0.8",
+    "lodash": "^4.17.23",
     "nativewind": "latest",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -26,6 +29,7 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
+    "react-native-select-dropdown": "^4.0.1",
     "react-native-svg": "^15.12.1"
   },
   "devDependencies": {

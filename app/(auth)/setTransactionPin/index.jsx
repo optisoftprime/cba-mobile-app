@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
 
 export default function SetTransactionPIN() {
   const [pin, setPin] = useState(['', '', '', '']);
@@ -40,7 +42,7 @@ export default function SetTransactionPIN() {
     //   return;
     // }
 
-   navigateTo("successScreen")
+    navigateTo('successScreen');
   };
 
   return (
@@ -49,17 +51,15 @@ export default function SetTransactionPIN() {
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        
         {/* Header */}
         <Header
           title="Set Transaction PIN"
           onLeftPress={navigateBack}
-          color="#0E7490"
           showLeftIcon={true}
         />
 
         {/* Illustration */}
-        <View className="items-center px-5 mb-6">
+        <View className="mb-6 items-center px-5">
           <Image
             source={require('../../../assets/cuate.png')} // REPLACE WITH YOUR IMAGE PATH
             style={{ width: 250, height: 250 }}
@@ -68,14 +68,14 @@ export default function SetTransactionPIN() {
         </View>
 
         {/* Description Text */}
-        <View className="px-5 mb-8">
-          <Text className="text-center text-sm text-gray-600 leading-5">
+        <View className="mb-8 px-5">
+          <Text className="text-center text-sm leading-5 text-gray-600">
             Add an extra layer of protection for your money
           </Text>
         </View>
 
         {/* PIN Input Boxes */}
-        <View className="flex-row justify-center px-5 mb-8">
+        <View className="mb-8 flex-row justify-center px-5">
           {pin.map((digit, index) => (
             <TextInput
               key={index}
@@ -85,27 +85,29 @@ export default function SetTransactionPIN() {
               onKeyPress={(e) => handleKeyPress(e, index)}
               keyboardType="numeric"
               maxLength={1}
-              className="text-center text-2xl font-bold rounded-lg mx-2"
+              className="mx-2 rounded-lg text-center text-2xl font-bold"
               style={{
                 width: 60,
                 height: 60,
-                backgroundColor: digit ? '#0E7490' : 'white',
-                color: digit ? 'white' : '#0E7490',
+                backgroundColor: digit ? Colors?.primary : 'white',
+                color: digit ? 'white' : Colors?.primary,
                 borderWidth: 2,
-                borderColor: '#0E7490',
+                borderColor: Colors?.primary,
               }}
             />
           ))}
         </View>
 
         {/* Continue Button - Fixed at Bottom */}
-        <View className="px-5 pb-6 pt-4 mt-auto">
-          <TouchableOpacity
+        <View className="mt-auto px-5 pb-6 pt-4">
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg py-4 bg-[#0E7490]"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

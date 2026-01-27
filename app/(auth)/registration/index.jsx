@@ -1,9 +1,13 @@
 // screens/RegistrationForm.jsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
+import TextInputComponent from 'components/textInputs';
+import { GlobalStatusBar } from 'config/statusBar';
 
 export default function RegistrationForm() {
   const [accountNumber, setAccountNumber] = useState('');
@@ -12,21 +16,7 @@ export default function RegistrationForm() {
   const handleContinue = () => {
     console.log('Account Number:', accountNumber);
     console.log('Terms Agreed:', isAgreed);
-
-    // // Validation
-    // if (!accountNumber.trim()) {
-    //   console.log('Error: Account number is required');
-    //   return;
-    // }
-
-    // if (!isAgreed) {
-    //   console.log('Error: Must agree to terms');
-    //   return;
-    // }
-
-    // Navigate to next step
     navigateTo('otp');
-    console.log('Proceeding to next step...');
   };
 
   const toggleCheckbox = () => {
@@ -35,7 +25,8 @@ export default function RegistrationForm() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1" style={{backgroundColor:Colors?.background}}>
+      <GlobalStatusBar style="dark-content" />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
@@ -50,25 +41,15 @@ export default function RegistrationForm() {
 
         {/* Form Content */}
         <View className="flex-1 px-5">
-          {/* Account Number Input */}
-          <View className="mb-6">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Account Number</Text>
-            <TextInput
-              value={accountNumber}
-              onChangeText={(text) => {
-                setAccountNumber(text);
-                console.log('Account Number Input:', text);
-              }}
-              placeholder="Enter account number"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="numeric"
-              className="rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900"
-              style={{
-                borderColor: '#D1D5DB',
-                fontSize: 16,
-              }}
-            />
-          </View>
+          {/* Account Number Input - Remove the wrapper mb-6 since component adds it */}
+          <TextInputComponent
+            label="Account Number"
+            value={accountNumber}
+            onChangeText={setAccountNumber}
+            placeholder="Enter account number"
+            keyboardType="numeric"
+            // The component already adds mb-6 (24px) margin, so don't wrap it in another mb-6
+          />
 
           {/* Terms & Conditions Checkbox */}
           <TouchableOpacity
@@ -78,27 +59,29 @@ export default function RegistrationForm() {
             <View
               className="mr-3 mt-0.5 h-5 w-5 items-center justify-center rounded"
               style={{
-                backgroundColor: isAgreed ? '#0E7490' : 'white',
+                backgroundColor: isAgreed ? Colors?.primary : 'white',
                 borderWidth: 2,
-                borderColor: isAgreed ? '#0E7490' : '#D1D5DB',
+                borderColor: isAgreed ? Colors?.primary : '#D1D5DB',
               }}>
               {isAgreed && <Ionicons name="checkmark" size={14} color="white" />}
             </View>
             <Text className="flex-1 text-sm leading-5 text-gray-700">
-              By registering you agree to Ezone's Banking{' '}
-              <Text style={{ color: '#0E7490' }}>Terms & Private Policy</Text>
+              By registering you agree to Ezone&apos;s Banking{' '}
+              <Text style={{ color: Colors?.primary }}>Terms & Private Policy</Text>
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6 pt-4">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg py-4 bg-[#0E7490]"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

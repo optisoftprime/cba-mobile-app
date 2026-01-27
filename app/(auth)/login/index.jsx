@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { navigateTo } from 'app/navigate';
+import { Colors } from 'config/theme';
+import TextInputComponent from './../../../components/textInputs';
 
 export default function LoginScreen() {
   const [accountNumber, setAccountNumber] = useState('0987654321');
@@ -15,7 +17,7 @@ export default function LoginScreen() {
     console.log('Account:', accountNumber);
     console.log('Password:', password);
     // Add your navigation logic here
-    navigateTo("appLayout")
+    navigateTo('appLayout');
   };
 
   return (
@@ -23,7 +25,7 @@ export default function LoginScreen() {
       source={require('../../../assets/image 2.png')}
       className="flex-1"
       resizeMode="cover">
-      <View className="flex-1 bg-[#0E7490]">
+      <View className="flex-1" style={{ backgroundColor: Colors.primary, opacity: 0.75 }}>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 80 }}
           showsVerticalScrollIndicator={false}>
@@ -79,7 +81,10 @@ export default function LoginScreen() {
                 <Text className="text-sm text-white">Remember me</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={()=>{navigateTo("forgetPassword")}}>
+              <TouchableOpacity
+                onPress={() => {
+                  navigateTo('forgetPassword');
+                }}>
                 <Text className="text-sm text-white">Forgot Password?</Text>
               </TouchableOpacity>
             </View>
@@ -89,7 +94,9 @@ export default function LoginScreen() {
               className="mt-5 items-center rounded-lg bg-white py-4"
               onPress={handleLogin}
               activeOpacity={0.8}>
-              <Text className="text-base font-semibold text-[#0E7490]">Login</Text>
+              <Text className="text-base font-semibold" style={{ color: Colors?.primary }}>
+                Login
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

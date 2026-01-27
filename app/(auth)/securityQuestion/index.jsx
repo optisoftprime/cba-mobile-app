@@ -4,6 +4,7 @@ import { View, TouchableOpacity, ScrollView, Text, TextInput } from 'react-nativ
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import Dropdown from 'components/dropDown';
+import TouchBtn from 'components/touchBtn';
 
 // Sample security questions
 const securityQuestions = [
@@ -50,7 +51,6 @@ export default function SecurityQuestions() {
         <Header
           title="Secure your Access"
           onLeftPress={navigateBack}
-          color="#0E7490"
           showLeftIcon={true}
           subtitle="Set your security questions to protect your profile"
         />
@@ -138,12 +138,14 @@ export default function SecurityQuestions() {
 
         {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6 pt-4">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#0E7490] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

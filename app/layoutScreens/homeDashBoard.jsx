@@ -6,12 +6,36 @@ import { navigateTo } from 'app/navigate';
 
 export default function HomePage() {
   const services = [
-    { name: 'Transfer', icon: 'swap-horizontal', color: '#FCE7F3', iconColor: '#BE185D',link:"transferType" },
+    {
+      name: 'Transfer',
+      icon: 'swap-horizontal',
+      color: '#FCE7F3',
+      iconColor: '#BE185D',
+      link: 'transferType',
+    },
     { name: 'Savings', icon: 'wallet', color: '#FEF3C7', iconColor: '#D97706', link: 'save' },
-    { name: 'RizeCopp', icon: 'chatbubbles', color: '#CFFAFE', iconColor: '#0891B2',link:"rizeCoopOptions" },
-    { name: 'Loan', icon: 'home', color: '#D9F99D', iconColor: '#65A30D' ,link:"loanData"},
-    { name: 'Self Service', icon: 'card', color: '#E9D5FF', iconColor: '#7C3AED' ,link: 'fixedDepositData'},
-    { name: 'Utilities', icon: 'stats-chart', color: '#DBEAFE', iconColor: '#2563EB' ,link:"rizeCoopOptions"},
+    {
+      name: 'RizeCopp',
+      icon: 'chatbubbles',
+      color: '#CFFAFE',
+      iconColor: '#0891B2',
+      link: 'rizeCoopOptions',
+    },
+    { name: 'Loan', icon: 'home', color: '#D9F99D', iconColor: '#65A30D', link: 'loanData' },
+    {
+      name: 'Self Service',
+      icon: 'card',
+      color: '#E9D5FF',
+      iconColor: '#7C3AED',
+      link: 'fixedDepositData',
+    },
+    {
+      name: 'Utilities',
+      icon: 'stats-chart',
+      color: '#DBEAFE',
+      iconColor: '#2563EB',
+      link: 'utilitiesOptions',
+    },
   ];
 
   const goodies = [
@@ -42,7 +66,10 @@ export default function HomePage() {
             />
             <Text className="text-base font-semibold text-gray-800">Hello John</Text>
           </View>
-          <TouchableOpacity onPress={()=>{navigateTo("notification")}}>
+          <TouchableOpacity
+            onPress={() => {
+              navigateTo('notification');
+            }}>
             <Ionicons name="notifications-outline" size={24} color="#374151" />
           </TouchableOpacity>
         </View>
@@ -53,7 +80,15 @@ export default function HomePage() {
         balance="₦ 45,465.87"
         points="3,145 Points"
         walletNumber="0987654321"
-        color="#157196"
+        showWalletName={true}
+        showBalance={true}
+        showBalanceToggle={true}
+        showDescription={false} // No description needed here
+        showPoints={true}
+        showWalletNumber={true}
+        showCopyWallet={true}
+        showTopRightButton={false}
+        containerClassName="px-5 py-4"
       />
 
       {/* Over View Section */}

@@ -3,7 +3,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
+import WalletBalanceCard from 'components/walletCard';
+import { Colors } from 'config/theme';
 
 export default function ChildrenSavingsList() {
   const savings = [
@@ -46,12 +47,12 @@ export default function ChildrenSavingsList() {
 
   const handleCreateChildSavings = () => {
     console.log('Create Child Savings pressed');
-    navigateTo('childSavingsForm');
+    // navigateTo('childSavingsForm');
   };
 
   const handleViewDetails = (savingId) => {
     console.log('View details for saving:', savingId);
-    navigateTo('childSavingsDetails', { id: savingId });
+    // navigateTo('childSavingsDetails', { id: savingId });
   };
 
   return (
@@ -60,9 +61,14 @@ export default function ChildrenSavingsList() {
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        <Header title="Children's Savings" onLeftPress={navigateBack} showLeftIcon={true} />
-        
-        <WalletCard
+        <Header
+          title="Children's Savings"
+          onLeftPress={navigateBack}
+          showLeftIcon={true}
+          color="black"
+        />
+
+        <WalletBalanceCard
           walletName="Children Savings Wallet"
           balance="₦0.00"
           description="5% Interest Rate"
@@ -71,17 +77,24 @@ export default function ChildrenSavingsList() {
           topRightText="Withdraw"
           topRightAction={handleWithdraw}
           topRightIcon="account-balance-wallet"
-          bottomRightText="Top Up"
-          bottomRightAction={handleTopUp}
-          bottomRightIcon="add-circle"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={false}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={true}
+          containerClassName="mx-5 mb-8"
         />
 
         <View className="px-4">
           {/* Create Child Savings Button */}
-          <TouchableOpacity
-            onPress={handleCreateChildSavings}
-            className="mb-6 items-center py-3">
-            <Text className="text-sm font-semibold text-[#157196]">Create Child Savings</Text>
+          <TouchableOpacity onPress={handleCreateChildSavings} className="mb-6 items-center py-3">
+            <Text className="text-sm font-semibold " style={{ color: Colors?.primary }}>
+              Create Child Savings
+            </Text>
           </TouchableOpacity>
 
           {/* Savings List */}
@@ -125,8 +138,8 @@ export default function ChildrenSavingsList() {
                   {/* Progress Bar */}
                   <View className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200">
                     <View
-                      className="h-full bg-[#157196]"
-                      style={{ width: `${saving.progress}%` }}
+                      className="h-full "
+                      style={{ width: `${saving.progress}%`, backgroundColor: Colors?.primary }}
                     />
                   </View>
                   <Text className="mb-2 text-right text-xs font-semibold text-gray-700">
@@ -136,7 +149,8 @@ export default function ChildrenSavingsList() {
                   {/* View Details Button */}
                   <TouchableOpacity
                     onPress={() => handleViewDetails(saving.id)}
-                    className="items-center rounded-lg bg-[#157196] py-2">
+                    className="items-center rounded-lgco py-2"
+                    style={{ backgroundColor: Colors?.primary }}>
                     <Text className="text-xs font-semibold text-white">View Savings Details</Text>
                   </TouchableOpacity>
                 </View>

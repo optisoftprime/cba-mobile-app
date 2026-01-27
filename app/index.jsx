@@ -4,7 +4,6 @@ import { View, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SplashScreenAppImage } from '../svgs/splashScreen';
-import { Colors } from '../config/theme';
 import '../global.css';
 import { navigateTo } from './navigate';
 
@@ -60,7 +59,7 @@ export default function SplashScreen() {
   });
 
   return (
-    <View className="flex-1" style={{ backgroundColor: Colors.splashScreenBgColor }}>
+    <View className="flex-1" style={{ backgroundColor: "#D4E8F5" }}>
       <StatusBar style="light" />
       
       {/* Animated Logo Container - Centered */}

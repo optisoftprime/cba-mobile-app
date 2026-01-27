@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from 'config/theme';
 
 export default function BottomNavigation({ activeTab = 'Home', onTabChange }) {
   const tabs = [
@@ -13,7 +14,7 @@ export default function BottomNavigation({ activeTab = 'Home', onTabChange }) {
   ];
 
   return (
-    <View className="flex-row border-t border-gray-200 bg-white px-4 pb-6  shadow-2xl">
+    <View className="flex-row border-t border-gray-200 bg-white px-4 pb-6 shadow-2xl">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.name;
         const isScan = tab.name === 'Scan';
@@ -25,7 +26,10 @@ export default function BottomNavigation({ activeTab = 'Home', onTabChange }) {
               className="mb-5 flex-1 items-center justify-center"
               onPress={() => onTabChange?.(tab.name)}
               activeOpacity={0.7}>
-              <View className="border-3 -mt-9 rounded-full bg-[#0E7490] p-3">
+              <View 
+                className="border-3 -mt-9 rounded-full p-3"
+                style={{ backgroundColor: Colors?.primary || '#0E7490' }}
+              >
                 <Ionicons name="scan" size={28} color="white" />
               </View>
             </TouchableOpacity>
@@ -41,12 +45,14 @@ export default function BottomNavigation({ activeTab = 'Home', onTabChange }) {
             <Ionicons
               name={isActive ? tab.icon : tab.iconOutline}
               size={24}
-              color={isActive ? '#0E7490' : '#9CA3AF'}
+              color={isActive ? (Colors?.primary || '#0E7490') : '#9CA3AF'}
             />
             <Text
               className={`mt-1 text-xs ${
-                isActive ? 'font-medium text-[#0E7490]' : 'text-gray-400'
-              }`}>
+                isActive ? 'font-medium' : 'text-gray-400'
+              }`}
+              style={isActive ? { color: Colors?.primary } : {}}
+            >
               {tab.name}
             </Text>
           </TouchableOpacity>

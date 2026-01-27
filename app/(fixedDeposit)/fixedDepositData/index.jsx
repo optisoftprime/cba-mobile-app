@@ -1,11 +1,12 @@
 // screens/FixedDepositInfo.jsx
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
 
 export default function FixedDepositInfo() {
   const handleStartFixedDeposit = () => {
-    navigateTo("fixedDepositScreen")
+    navigateTo('fixedDepositScreen');
     // Navigate to fixed deposit form
   };
 
@@ -13,7 +14,7 @@ export default function FixedDepositInfo() {
     <View className="flex-1" style={{ backgroundColor: '#2E5423' }}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollView className="flex-1 px-4 pt-12 mt-5">
+      <ScrollView className="mt-5 flex-1 px-4 pt-12">
         {/* Hero Image Card */}
         <View className="mb-6 overflow-hidden rounded-3xl bg-white">
           <Image
@@ -24,9 +25,7 @@ export default function FixedDepositInfo() {
         </View>
 
         {/* Title */}
-        <Text className="mb-2 text-3xl font-bold text-white">
-          Grow Your Money{'\n'}Securely
-        </Text>
+        <Text className="mb-2 text-3xl font-bold text-white">Grow Your Money{'\n'}Securely</Text>
 
         {/* Benefits/Features Section */}
         <View className="mb-6">
@@ -73,13 +72,15 @@ export default function FixedDepositInfo() {
 
       {/* Start Button - Fixed at bottom */}
       <View className="px-4 pb-8 pt-4">
-        <TouchableOpacity
+        <TouchBtn
           onPress={handleStartFixedDeposit}
-          className="w-full items-center rounded-lg bg-white py-4">
-          <Text className="text-base font-bold" style={{ color: '#2E5423' }}>
-            Start Fixed Deposit
-          </Text>
-        </TouchableOpacity>
+          label="Start Fixed Deposit"
+          backgroundColor="white"
+          textColor="#2E5423" // dark green color
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
       </View>
     </View>
   );

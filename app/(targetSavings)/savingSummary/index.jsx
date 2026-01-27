@@ -3,11 +3,13 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from 'components/header';
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
 
 export default function TargetSavingsSummary() {
   const handleStartSavings = () => {
     // console.log('Start Target Savings pressed');
-    navigateTo("goalSavings")
+    navigateTo('goalSavings');
   };
 
   const handleCancel = () => {
@@ -28,13 +30,12 @@ export default function TargetSavingsSummary() {
       <Header title={'Summary'} showLeftIcon={true} color="black" />
 
       {/* Summary Card with Linear Gradient */}
-      <View className="mx-5 mt-6 rounded-lg overflow-hidden">
+      <View className="mx-5 mt-6 overflow-hidden rounded-lg">
         <LinearGradient
-          colors={['#3AA6A6', '#257B9E']}
+          colors={Colors?.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          className="p-5"
-        >
+          className="p-5">
           <View className="flex-row justify-between border-b border-white/20 py-4">
             <Text className="text-sm text-white/80">Goal Name</Text>
             <Text className="text-sm font-semibold text-white">{summaryData.goalName}</Text>
@@ -66,21 +67,25 @@ export default function TargetSavingsSummary() {
 
       {/* Buttons */}
       <View className="mx-5 mt-12 gap-3">
-        <TouchableOpacity 
-          onPress={handleStartSavings} 
-          className="rounded-lg py-4"
-          style={{ backgroundColor: '#157196' }}
-        >
-          <Text className="text-center font-semibold text-white">Start Target Savings</Text>
-        </TouchableOpacity>
+        <TouchBtn
+          onPress={handleStartSavings}
+          label="Start Target Savings"
+          textClassName="text-center font-semibold text-white"
+          buttonClassName="rounded-lg py-4"
+          containerClassName=""
+        />
 
-        <TouchableOpacity
+        <TouchBtn
           onPress={handleCancel}
-          className="rounded-lg border border-gray-300 bg-white py-4">
-          <Text className="text-center font-semibold" style={{ color: '#157196' }}>
-            Cancel
-          </Text>
-        </TouchableOpacity>
+          label="Cancel"
+          backgroundColor="white"
+          borderColor="#9CA3AF" // Tailwind's gray-300
+          borderWidth={1}
+          textColor={Colors?.primary}
+          textClassName="text-center font-semibold"
+          buttonClassName="rounded-lg py-4"
+          containerClassName=""
+        />
       </View>
     </ScrollView>
   );

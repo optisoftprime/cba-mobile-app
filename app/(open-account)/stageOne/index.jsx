@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, ScrollView } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Header from 'components/header';
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
+import TextInputComponent from 'components/textInputs';
+import { Colors } from 'config/theme';
+import  Dropdown  from 'components/dropDown';
 
 export default function PersonalInformation() {
   const [fullName, setFullName] = useState('');
@@ -10,6 +14,19 @@ export default function PersonalInformation() {
   const [gender, setGender] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
+  
+  // Dropdown states
+  const [isGenderOpen, setIsGenderOpen] = useState(false);
+  const [isPhoneOpen, setIsPhoneOpen] = useState(false);
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
+
+  // Options for dropdowns
+  const genderOptions = [
+    { label: 'Male', value: 'male' },
+    { label: 'Female', value: 'female' },
+    { label: 'Other', value: 'other' },
+    { label: 'Prefer not to say', value: 'prefer_not_to_say' },
+  ];
 
   const handleContinue = () => {
     navigateTo('stageTwo');
@@ -20,7 +37,10 @@ export default function PersonalInformation() {
       {/* Progress Bar */}
       <View className="px-6 pb-4 pt-12">
         <View className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
-          <View className="h-full rounded-full bg-[#157196]" style={{ width: '16.66%' }} />
+          <View
+            className={`h-full rounded-full`}
+            style={{ width: '16.66%', backgroundColor: Colors?.primary }}
+          />
         </View>
         <Text className="mt-2 text-center text-xs text-gray-600">Step 1 of 6</Text>
       </View>
@@ -33,69 +53,68 @@ export default function PersonalInformation() {
 
       <ScrollView className="flex-1 px-4">
         {/* Full Name Input */}
-        <View className="mb-6">
-          <Text className="mb-2 text-sm font-semibold text-gray-900">Full Name</Text>
-          <TextInput
-            className="rounded-lg border border-gray-300 px-4 py-3 text-base"
-            placeholder="Enter full name"
-            value={fullName}
-            onChangeText={setFullName}
-            placeholderTextColor="#9CA3AF"
-          />
-        </View>
+        <TextInputComponent
+          label="Full Name"
+          placeholder="Enter full name"
+          value={fullName}
+          onChangeText={setFullName}
+          containerStyle={{ marginBottom: 24 }}
+        />
 
         {/* Date of Birth Input */}
-        <View className="mb-6">
-          <Text className="mb-2 text-sm font-semibold text-gray-900">Date of Birth</Text>
-          <View className="relative">
-            <TextInput
-              className="rounded-lg border border-gray-300 px-4 py-3 text-base"
-              placeholder="dd/mm/yy"
-              value={dateOfBirth}
-              onChangeText={setDateOfBirth}
-              placeholderTextColor="#9CA3AF"
-            />
-            <View className="absolute right-4 top-3">
-              <MaterialCommunityIcons name="calendar-blank" size={20} color="#157196" />
-            </View>
-          </View>
-        </View>
+        <TextInputComponent
+          label="Date of Birth"
+          placeholder="dd/mm/yy"
+          value={dateOfBirth}
+          onChangeText={setDateOfBirth}
+          iconName="calendar-blank"
+          iconPosition="right"
+          IconComponent={MaterialCommunityIcons}
+          containerStyle={{ marginBottom: 24 }}
+        />
 
         {/* Gender Dropdown */}
-        <View className="mb-6">
-          <Text className="mb-2 text-sm font-semibold text-gray-900">Gender</Text>
-          <TouchableOpacity className="flex-row items-center justify-between rounded-lg border border-gray-300 px-4 py-3">
-            <Text className="text-base text-gray-400">Select gender</Text>
-            <MaterialIcons name="keyboard-arrow-down" size={20} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
+        <Dropdown
+          label="Gender"
+          placeholder="Select gender"
+          value={gender}
+          options={genderOptions}
+          onSelect={setGender}
+          isOpen={isGenderOpen}
+          onToggle={() => setIsGenderOpen(!isGenderOpen)}
+        />
 
         {/* Phone Number Input */}
-        <View className="mb-6">
-          <Text className="mb-2 text-sm font-semibold text-gray-900">Phone Number</Text>
-          <TouchableOpacity className="flex-row items-center justify-between rounded-lg border border-gray-300 px-4 py-3">
-            <Text className="text-base text-gray-400">Enter phone number</Text>
-            <MaterialIcons name="keyboard-arrow-down" size={20} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
+        <TextInputComponent
+          label="Phone Number"
+          placeholder="Enter phone number"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          keyboardType="phone-pad"
+          containerStyle={{ marginBottom: 24 }}
+        />
 
         {/* Email Address Input */}
-        <View className="mb-8">
-          <Text className="mb-2 text-sm font-semibold text-gray-900">Email Address</Text>
-          <TouchableOpacity className="flex-row items-center justify-between rounded-lg border border-gray-300 px-4 py-3">
-            <Text className="text-base text-gray-400">Enter email address</Text>
-            <MaterialIcons name="keyboard-arrow-down" size={20} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
+        <TextInputComponent
+          label="Email Address"
+          placeholder="Enter email address"
+          value={emailAddress}
+          onChangeText={setEmailAddress}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          containerStyle={{ marginBottom: 32 }}
+        />
       </ScrollView>
 
       {/* Continue Button */}
       <View className="px-6 pb-8">
-        <TouchableOpacity
+        <TouchBtn
           onPress={handleContinue}
-          className="w-full items-center rounded-lg bg-[#157196] py-4">
-          <Text className="text-base font-bold text-white">Continue</Text>
-        </TouchableOpacity>
+          label="Continue"
+          textClassName="text-base font-bold text-white"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
       </View>
     </View>
   );

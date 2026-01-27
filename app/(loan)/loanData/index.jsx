@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
 
 export default function LoanInfo() {
   const handleStartFixedDeposit = () => {
@@ -73,13 +74,15 @@ export default function LoanInfo() {
 
       {/* Start Fixed Deposit Button - Fixed at bottom */}
       <View className="px-4 pb-8 pt-4">
-        <TouchableOpacity
+        <TouchBtn
           onPress={handleStartFixedDeposit}
-          className="w-full items-center rounded-lg bg-white py-4">
-          <Text className="text-base font-bold" style={{ color: '#4C1D95' }}>
-            Start Fixed Deposit
-          </Text>
-        </TouchableOpacity>
+          label="Start Fixed Deposit"
+          backgroundColor="white"
+          textColor="#4C1D95" // purple-900 color
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
       </View>
     </View>
   );

@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { router } from 'expo-router';
 import Header from 'components/header';
-import SavingsWalletCard from 'components/walletBox';
 import { navigateTo } from 'app/navigate';
+import WalletBalanceCard from 'components/walletCard';
 
 export default function SavingsPage() {
   const strictPlans = [
@@ -47,7 +47,7 @@ export default function SavingsPage() {
     description: 'Automatic, daily, weekly, or monthly savings',
     color: '#FFFBEB',
     imagePath: require('../../assets/image 62.png'),
-    link: 'fixedDeposit', // Add a link if you want it to navigate
+    // link: 'fixedDeposit',  Add a link if you want it to navigate
   };
 
   // Function to handle navigation to savings plan details
@@ -73,12 +73,22 @@ export default function SavingsPage() {
       <Header title={'My Savings'} showLeftIcon={false} color="black" />
 
       {/* Wallet Balance Card Component */}
-      <SavingsWalletCard
+      <WalletBalanceCard
         walletName="RizeSpring Savings Wallet"
         balance="₦0.00"
         description="Across 7 savings plans"
         onDescriptionPress={handleSavingsPlansPress}
         color="#0F5ED5"
+        showWalletName={true}
+        showBalance={true}
+        showBalanceToggle={true}
+        showDescription={true}
+        showDescriptionButton={true}
+        showPoints={false}
+        showWalletNumber={false}
+        showCopyWallet={false}
+        showTopRightButton={false}
+        containerClassName="mx-5 mb-8"
       />
 
       {/* Strict Savings Plans */}

@@ -3,7 +3,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
+import WalletBalanceCard from 'components/walletCard';
+import { Colors } from 'config/theme';
 
 export default function ProjectSavingsList() {
   const projects = [
@@ -47,7 +48,7 @@ export default function ProjectSavingsList() {
 
   const handleViewDetails = (projectId) => {
     // console.log('View details for project:', projectId);
-    navigateTo('loans');
+    // navigateTo('loans');
   };
 
   return (
@@ -56,9 +57,14 @@ export default function ProjectSavingsList() {
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        <Header title="Project Savings" onLeftPress={navigateBack} showLeftIcon={true} />
+        <Header
+          title="Project Savings"
+          onLeftPress={navigateBack}
+          showLeftIcon={true}
+          color="black"
+        />
 
-        <WalletCard
+        <WalletBalanceCard
           walletName="Project Savings Wallet"
           balance="₦0.00"
           description="5% Interest Rate"
@@ -67,14 +73,23 @@ export default function ProjectSavingsList() {
           topRightText="Withdraw"
           topRightAction={handleWithdraw}
           topRightIcon="account-balance-wallet"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={false}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={true}
+          containerClassName="mx-5 mb-8"
         />
-
         <View className="px-4">
           {/* Wallet Card with Withdraw Button */}
 
           {/* Create New Project Savings Button */}
           <TouchableOpacity onPress={handleCreateNewProject} className="mb-6 items-center py-3">
-            <Text className="text-sm font-semibold text-[#157196]">Create New Project Savings</Text>
+            <Text className="text-sm font-semibold" style={{color:Colors?.primary}}>Create New Project Savings</Text>
           </TouchableOpacity>
 
           {/* Projects List */}
@@ -118,8 +133,8 @@ export default function ProjectSavingsList() {
                   {/* Progress Bar */}
                   <View className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200">
                     <View
-                      className="h-full bg-[#157196]"
-                      style={{ width: `${project.progress}%` }}
+                      className="h-full"
+                      style={{ width: `${project.progress}%`, backgroundColor: Colors?.primary }}
                     />
                   </View>
                   <Text className="mb-2 text-right text-xs font-semibold text-gray-700">
@@ -129,7 +144,8 @@ export default function ProjectSavingsList() {
                   {/* View Details Button */}
                   <TouchableOpacity
                     onPress={() => handleViewDetails(project.id)}
-                    className="items-center rounded-lg bg-[#157196] py-2">
+                    className="items-center rounded-lg py-2"
+                    style={{ backgroundColor: Colors?.primary }}>
                     <Text className="text-xs font-semibold text-white">View Savings Details</Text>
                   </TouchableOpacity>
                 </View>

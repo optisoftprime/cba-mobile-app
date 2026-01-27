@@ -5,6 +5,9 @@ import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import WalletCard from 'components/walletBox';
 import Dropdown from 'components/dropDown';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
+import WalletBalanceCard from 'components/walletCard';
 
 export default function ChildSavingsForm() {
   const [childName, setChildName] = useState('');
@@ -44,12 +47,22 @@ export default function ChildSavingsForm() {
           color="black"
         />
 
-        <WalletCard
+        <WalletBalanceCard
           walletName="Children Savings Wallet"
           balance="₦0.00"
           description="5% Interest Rate"
           backgroundImagePath={require('../../../assets/Vector .png')}
           color="#5C4033"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={false}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={false}
+          containerClassName="mx-5 mb-8"
         />
 
         {/* Form Content */}
@@ -108,7 +121,7 @@ export default function ChildSavingsForm() {
           </View>
 
           {/* Info Box */}
-          <View className="mb-8 rounded-lg bg-blue-100 p-4">
+          <View className="mb-8 rounded-lg p-4" style={{ backgroundColor: Colors?.fade }}>
             <Text className="mb-2 font-semibold text-gray-900">Info:</Text>
             <Text className="text-sm text-gray-700">
               • 4% interest monthly and bonus points for consistent savings
@@ -118,12 +131,14 @@ export default function ChildSavingsForm() {
 
         {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold text-white"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

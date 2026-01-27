@@ -5,6 +5,8 @@ import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import { useLocalSearchParams } from 'expo-router';
 import { FaceIdSmallIcon } from 'svgs/faceIdSvg';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
 
 export default function EnterPIN() {
   const [pin, setPin] = useState(['', '', '', '']);
@@ -44,7 +46,7 @@ export default function EnterPIN() {
     }
 
     console.log('Verifying PIN...');
-    navigateTo(params?.nextScreen || 'dashboard');
+    // navigateTo(params?.nextScreen || 'dashboard');
   };
 
   const handleFaceID = () => {
@@ -63,10 +65,8 @@ export default function EnterPIN() {
           title="Enter Pin"
           onLeftPress={navigateBack}
           showLeftIcon={true}
-          subtitle={"Enter your 4 digit pin"}
+          subtitle={'Enter your 4 digit pin'}
         />
-
-        
 
         {/* PIN Input Boxes */}
         <View className="mb-8 flex-row justify-center px-5">
@@ -84,10 +84,10 @@ export default function EnterPIN() {
               style={{
                 width: 60,
                 height: 60,
-                backgroundColor: digit ? '#0E7490' : 'white',
-                color: digit ? 'white' : '#0E7490',
+                backgroundColor: digit ? Colors?.primary : 'white',
+                color: digit ? 'white' :  Colors?.primary,
                 borderWidth: 2,
-                borderColor: '#0E7490',
+                borderColor:  Colors?.primary,
               }}
             />
           ))}
@@ -95,22 +95,23 @@ export default function EnterPIN() {
 
         {/* Face ID Button */}
         <View className="mb-8 items-center">
-          <TouchableOpacity 
-            onPress={handleFaceID}
-            className="flex-row items-center">
-            <Text className="text-sm font-medium text-[#0E7490] flex flex-row justify-center items-center gap-2"><FaceIdSmallIcon/> Face ID</Text>
+          <TouchableOpacity onPress={handleFaceID} className="flex-row items-center">
+            <Text className="flex flex-row items-center justify-center gap-2 text-sm font-medium " style={{color:Colors?.primary}}>
+              <FaceIdSmallIcon /> Face ID
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Continue Button */}
         <View className="mt-auto px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg py-4"
-            style={{ backgroundColor: '#0E7490' }}
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

@@ -3,7 +3,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
+import WalletBalanceCard from 'components/walletCard'; // Updated import
+import { Colors } from 'config/theme';
 
 export default function FixedDepositList() {
   const deposits = [
@@ -48,26 +49,35 @@ export default function FixedDepositList() {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
         <Header title="Fixed Deposit" onLeftPress={navigateBack} showLeftIcon={true} />
-         <WalletCard
-            walletName="Fixed Deposit Wallet"
-            balance="₦0.00"
-            description="5% Interest Rate"
-            backgroundImagePath={require('../../../assets/Vector .png')}
-            color="#2E5423"
-            topRightText="Withdraw"
-            topRightAction={handleWithdraw}
-            topRightIcon="account-balance-wallet"
-          />
+
+        {/* Updated WalletBalanceCard */}
+        <WalletBalanceCard
+          walletName="Fixed Deposit Wallet"
+          balance="₦0.00"
+          description="5% Interest Rate"
+          backgroundImagePath={require('../../../assets/Vector .png')}
+          color="#2E5423"
+          topRightText="Withdraw"
+          topRightAction={handleWithdraw}
+          topRightIcon="account-balance-wallet"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={false}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={true}
+          containerClassName="mx-5 mb-8"
+        />
 
         <View className="px-4">
-          {/* Wallet Card with Top Right Button */}
-         
-
           {/* Create Fixed Deposits Button */}
-          <TouchableOpacity
-            onPress={handleCreateFixedDeposit}
-            className="mb-6 items-center py-3">
-            <Text className="text-sm font-semibold text-[#157196]">Create Fixed Deposits</Text>
+          <TouchableOpacity onPress={handleCreateFixedDeposit} className="mb-6 items-center py-3">
+            <Text className="text-sm font-semibold" style={{ color: Colors?.primary }}>
+              Create Fixed Deposits
+            </Text>
           </TouchableOpacity>
 
           {/* Deposits List */}
@@ -112,7 +122,7 @@ export default function FixedDepositList() {
                   <View className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200">
                     <View
                       className="h-full bg-[#157196]"
-                      style={{ width: `${deposit.progress}%` }}
+                      style={{ width: `${deposit.progress}%`, backgroundColor: Colors?.primary }}
                     />
                   </View>
                   <Text className="mb-2 text-right text-xs font-semibold text-gray-700">
@@ -122,7 +132,8 @@ export default function FixedDepositList() {
                   {/* View Details Button */}
                   <TouchableOpacity
                     onPress={() => handleViewDetails(deposit.id)}
-                    className="items-center rounded-lg bg-[#157196] py-2">
+                    className="items-center rounded-lg py-2"
+                    style={{ backgroundColor: Colors?.primary }}>
                     <Text className="text-xs font-semibold text-white">View Savings Details</Text>
                   </TouchableOpacity>
                 </View>

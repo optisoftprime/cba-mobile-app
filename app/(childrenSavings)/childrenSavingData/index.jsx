@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
 
 export default function ChildSavingsInfo() {
   const handleStartSaving = () => {
@@ -40,9 +41,7 @@ export default function ChildSavingsInfo() {
             </View>
             <View className="flex-row items-start">
               <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Parent-controlled savings
-              </Text>
+              <Text className="flex-1 text-sm leading-6 text-white">Parent-controlled savings</Text>
             </View>
             <View className="flex-row items-start">
               <Text className="mr-2 text-white">•</Text>
@@ -79,13 +78,15 @@ export default function ChildSavingsInfo() {
 
       {/* Start Saving Button - Fixed at bottom */}
       <View className="px-4 pb-8 pt-4">
-        <TouchableOpacity
+        <TouchBtn
           onPress={handleStartSaving}
-          className="w-full items-center rounded-lg bg-white py-4">
-          <Text className="text-base font-bold" style={{ color: '#5C4033' }}>
-            Start Saving
-          </Text>
-        </TouchableOpacity>
+          label="Start Saving"
+          backgroundColor="white"
+          textColor="#5C4033" // brown color
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
       </View>
     </View>
   );

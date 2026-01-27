@@ -1,17 +1,20 @@
 // animations/onboardingAnimations.js
-import { useRef, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 import { Animated } from 'react-native';
 
-export const useOnboardingAnimation = (currentIndex, onNext, onBack) => {
+export const useOnboardingAnimation = (currentIndex) => {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const isAnimating = useRef(false);
+  const prevIndex = useRef(currentIndex);
 
-  const animateTransition = useCallback((nextIndex) => {
-    if (isAnimating.current) return;
+  useEffect(() => {
+    if (prevIndex.current === currentIndex || isAnimating.current) {
+      return;
+    }
+
     isAnimating.current = true;
-
-    const direction = nextIndex > currentIndex ? -1 : 1;
+    const direction = currentIndex > prevIndex.current ? -1 : 1;
     
     // Fade out and slide
     Animated.parallel([
@@ -26,13 +29,6 @@ export const useOnboardingAnimation = (currentIndex, onNext, onBack) => {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // Call the callback to update index
-      if (nextIndex > currentIndex) {
-        onNext(nextIndex);
-      } else {
-        onBack(nextIndex);
-      }
-      
       slideAnim.setValue(direction * -50);
       
       // Fade in and slide back
@@ -50,13 +46,13 @@ export const useOnboardingAnimation = (currentIndex, onNext, onBack) => {
         }),
       ]).start(() => {
         isAnimating.current = false;
+        prevIndex.current = currentIndex;
       });
     });
-  }, [currentIndex, slideAnim, fadeAnim, onNext, onBack]);
+  }, [currentIndex, slideAnim, fadeAnim]);
 
   return {
     slideAnim,
     fadeAnim,
-    animateTransition,
   };
 };

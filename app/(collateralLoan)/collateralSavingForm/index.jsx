@@ -5,6 +5,8 @@ import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import WalletCard from 'components/walletBox';
 import Dropdown from 'components/dropDown';
+import TouchBtn from 'components/touchBtn';
+import WalletBalanceCard from 'components/walletCard';
 
 export default function CollateralLoanForm() {
   const [contributionAmount, setContributionAmount] = useState('');
@@ -49,17 +51,27 @@ export default function CollateralLoanForm() {
         />
 
         {/* Wallet Card */}
-        <View >
-          <WalletCard
+        <View>
+          <WalletBalanceCard
             walletName="Collateral Savings Wallet"
             balance="₦0.00"
             description="5% Interest Rate"
             backgroundImagePath={require('../../../assets/Vector .png')}
             color="#A0522D"
+            showWalletName={true}
+            showBalance={true}
+            showBalanceToggle={true}
+            showDescription={true}
+            showDescriptionButton={true}
+            showPoints={false}
+            showWalletNumber={false}
+            showCopyWallet={false}
+            showTopRightButton={false}
+            containerClassName="mx-5 mb-8"
           />
         </View>
 
-        <View className="flex-1 px-5 pt-6">
+        <View className="flex-1 px-5 ">
           {/* Contribution Amount */}
           <View className="mb-4">
             <Text className="mb-2 text-sm font-semibold text-gray-900">Contribution Amount</Text>
@@ -113,12 +125,14 @@ export default function CollateralLoanForm() {
 
         {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

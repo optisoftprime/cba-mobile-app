@@ -1,4 +1,3 @@
-// screens/OnboardingWelcome.jsx
 import React, { useState } from 'react';
 import { View, Text, ImageBackground, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,58 +6,42 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { pageData } from 'config/onboarding';
 import { useOnboardingAnimation } from './transition/onboardingAnimations';
 import { navigateBack, navigateTo } from 'app/navigate';
+import { Colors } from 'config/theme';
+import { GlobalStatusBar } from 'config/statusBar';
 
 export default function OnboardingWelcome() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const handleNext = (nextIndex) => {
-    if (nextIndex !== undefined) {
-      setCurrentIndex(nextIndex);
-    } else if (currentIndex < pageData.length - 1) {
-      animateTransition(currentIndex + 1);
+  const { slideAnim, fadeAnim } = useOnboardingAnimation(currentIndex);
+
+  const handleNext = () => {
+    if (currentIndex < pageData.length - 1) {
+      setCurrentIndex(currentIndex + 1);
     } else {
       navigateTo('/landingScreen');
     }
   };
 
-  const handleBack = (prevIndex) => {
-    if (currentIndex == 0) {
+  const handleBack = () => {
+    if (currentIndex === 0) {
       navigateBack();
-    }
-    if (prevIndex !== undefined) {
-      setCurrentIndex(prevIndex);
-    } else if (currentIndex > 0) {
-      animateTransition(currentIndex - 1);
+    } else {
+      setCurrentIndex(currentIndex - 1);
     }
   };
-
-  const { slideAnim, fadeAnim, animateTransition } = useOnboardingAnimation(
-    currentIndex,
-    handleNext,
-    handleBack
-  );
 
   const currentData = pageData[currentIndex];
 
-  // Dynamic image mapping
-  const getImageSource = (imagePath) => {
-    const imageMap = {
-      '../assets/image 19.png': require('../../assets/image 19.png'),
-      '../assets/image 20.png': require('../../assets/image 20.png'),
-      '../assets/image 21.png': require('../../assets/image 21.png'),
-    };
-    return imageMap[imagePath];
-  };
-
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: Colors?.background }}>
+      <GlobalStatusBar />
+
       {/* Back Button */}
       <TouchableOpacity
         className="absolute left-4 top-12 z-10"
-        onPress={() => handleBack()}
+        onPress={handleBack}
         disabled={currentIndex === 0}>
         <Ionicons
-          onPress={() => handleBack()}
           name="arrow-back"
           size={28}
           color={currentIndex === 0 ? 'gray' : 'black'}
@@ -78,12 +61,12 @@ export default function OnboardingWelcome() {
           transform: [{ translateX: slideAnim }],
         }}>
         <ImageBackground
-          source={getImageSource(currentData.image)}
+          source={currentData.image}
           className="flex-1"
           resizeMode="cover">
           {/* Gradient Overlay */}
           <LinearGradient
-            colors={['transparent', 'rgba(16, 137, 158, 0.7)', '#10899E']}
+            colors={['transparent', Colors?.accent, Colors?.secondary]}
             locations={[0.4, 0.7, 1]}
             className="absolute bottom-0 left-0 right-0"
             style={{ height: '50%' }}
@@ -91,7 +74,7 @@ export default function OnboardingWelcome() {
         </ImageBackground>
 
         {/* Content Section with Teal Background */}
-        <View className="px-6 pb-8 pt-6" style={{ backgroundColor: '#10899E' }}>
+        <View className="px-6 pb-8 pt-6" style={{ backgroundColor: Colors?.secondary }}>
           <Text className="mb-3 text-3xl font-bold text-white">{currentData.title}</Text>
 
           <Text className="mb-6 text-base text-white">{currentData.text}</Text>
@@ -121,8 +104,8 @@ export default function OnboardingWelcome() {
             {/* Next Button (Right) */}
             <TouchableOpacity
               className="rounded-lg bg-white px-6 py-3"
-              onPress={() => handleNext()}>
-              <Text className="text-base font-semibold text-[#10899E]">
+              onPress={handleNext}>
+              <Text className="text-base font-semibold" style={{ color: Colors?.primary }}>
                 {currentIndex === pageData.length - 1 ? 'Get Started' : 'Next >'}
               </Text>
             </TouchableOpacity>

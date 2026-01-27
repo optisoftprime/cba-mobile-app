@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
 
 export default function TransferType() {
   const [selectedType, setSelectedType] = useState('wallet_to_wallet');
@@ -46,10 +48,14 @@ export default function TransferType() {
               className="mb-4 flex-row items-center rounded-lg bg-gray-100 px-4 py-4"
               activeOpacity={0.7}>
               <View
-                className={`mr-3 h-6 w-6 items-center justify-center rounded-full border-2 ${
-                  selectedType === type.id ? 'border-[#157196]' : 'border-gray-400'
-                }`}>
-                {selectedType === type.id && <View className="h-3 w-3 rounded-full bg-[#157196]" />}
+                className="mr-3 h-6 w-6 items-center justify-center rounded-full border-2 border-gray-400"
+                style={selectedType === type.id ? { borderColor: Colors?.primary } : {}}>
+                {selectedType === type.id && (
+                  <View
+                    className="h-3 w-3 rounded-full "
+                    style={{ backgroundColor: Colors?.primary, borderRadius: 50 }}
+                  />
+                )}
               </View>
               <Text className="text-base text-gray-900">{type.label}</Text>
             </TouchableOpacity>
@@ -58,12 +64,14 @@ export default function TransferType() {
 
         {/* Next Button - Fixed at Bottom */}
         <View className="mt-10 px-4 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleNext}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Next</Text>
-          </TouchableOpacity>
+            label="Next"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

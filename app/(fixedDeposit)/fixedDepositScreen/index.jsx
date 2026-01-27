@@ -4,8 +4,10 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
 import TenureModal from './modal/tenureModal';
+import TouchBtn from 'components/touchBtn';
+import WalletBalanceCard from 'components/walletCard';
+import { Colors } from 'config/theme';
 
 export default function FixedDepositForm() {
   const [amountToDeposit, setAmountToDeposit] = useState('');
@@ -55,19 +57,22 @@ export default function FixedDepositForm() {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
         <Header title="Fixed Deposit" onLeftPress={navigateBack} showLeftIcon={true} />
-        <WalletCard
+        <WalletBalanceCard
           walletName="Fixed Deposit Wallet"
           balance="₦0.00"
           description="5% Interest Rate"
-          descriptionBackground="white"
-          descriptionTextColor="text-gray-800"
-          backgroundColor="bg-[#2E5423]"
           backgroundImagePath={require('../../../assets/Vector .png')}
-          iconName="wallet"
-          iconSize={16}
-          iconColor="white"
-          balanceTextSize="text-4xl"
           color="#2E5423"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={false}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={false}
+          containerClassName="mx-5 mb-8"
         />
 
         <View className="flex-1 px-5">
@@ -131,33 +136,44 @@ export default function FixedDepositForm() {
           <View className="mb-8 flex-row items-center">
             <TouchableOpacity
               onPress={() => setUnderstood(!understood)}
-              className={`h-5 w-5 rounded border-2 ${
-                understood ? 'border-[#157196] bg-[#157196]' : 'border-gray-400'
-              } items-center justify-center`}>
+              className="h-5 w-5 items-center justify-center rounded border-2"
+              style={{
+                borderColor: understood ? Colors?.primary : '#000000',
+                backgroundColor: understood ? Colors?.primary : 'transparent',
+              }}>
               {understood && <Ionicons name="checkmark" size={16} color="white" />}
             </TouchableOpacity>
+
             <Text className="ml-3 text-sm text-gray-800">I understand, I can't withdraw early</Text>
           </View>
         </View>
 
         {/* Continue Button */}
         <View className="px-5 pb-2">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
 
         {/* Cancel Button */}
         <View className="px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleCancel}
-            className="items-center rounded-lg border-2 border-[#157196] bg-white py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-[#157196]">Cancel</Text>
-          </TouchableOpacity>
+            label="Cancel"
+            backgroundColor="white"
+            borderColor={Colors?.primary}
+            borderWidth={2}
+            textColor={Colors?.primary}
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
 

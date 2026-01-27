@@ -1,18 +1,20 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
 
 export default function OpenNewAccount() {
   const handleGetStarted = () => {
-    navigateTo("stageOne")
+    navigateTo('stageOne');
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#0E7490]">
+    <ScrollView className="flex-1" style={{ backgroundColor: Colors?.primary }}>
       <View className="min-h-screen flex-1 items-center justify-center px-5 py-12">
         {/* Card Container */}
-        <View className="w-full  items-center rounded-3xl bg-white p-8">
+        <View className="w-full items-center rounded-3xl bg-white p-8">
           {/* Star Icon */}
           <MaterialCommunityIcons name="star" size={48} color="#FFD700" />
 
@@ -28,7 +30,7 @@ export default function OpenNewAccount() {
           <View className="mb-8 w-full gap-4">
             {/* Feature 1 */}
             <View className="flex-row items-center">
-              <MaterialCommunityIcons name="check-circle" size={24} color="#2196F3" />
+              <MaterialCommunityIcons name="check-circle" size={21} color={Colors?.primary} />
               <Text className="ml-3 flex-1 text-sm text-gray-800">
                 Quick and easy setup process
               </Text>
@@ -36,7 +38,7 @@ export default function OpenNewAccount() {
 
             {/* Feature 2 */}
             <View className="flex-row items-center">
-              <MaterialCommunityIcons name="check-circle" size={24} color="#2196F3" />
+              <MaterialCommunityIcons name="check-circle" size={21} color={Colors?.primary} />
               <Text className="ml-3 flex-1 text-sm text-gray-800">
                 Bank-grade security and encryption
               </Text>
@@ -44,7 +46,7 @@ export default function OpenNewAccount() {
 
             {/* Feature 3 */}
             <View className="flex-row items-center">
-              <MaterialCommunityIcons name="check-circle" size={24} color="#2196F3" />
+              <MaterialCommunityIcons name="check-circle" size={21} color={Colors?.primary} />
               <Text className="ml-3 flex-1 text-sm text-gray-800">
                 Your account ready in minutes
               </Text>
@@ -52,11 +54,15 @@ export default function OpenNewAccount() {
           </View>
 
           {/* Get Started Button */}
-          <TouchableOpacity
-            onPress={handleGetStarted}
-            className="w-full items-center rounded-lg bg-[#157196] py-4">
-            <Text className="text-base font-bold text-white">Get Started</Text>
-          </TouchableOpacity>
+          <View className="w-full">
+            <TouchBtn
+              onPress={handleGetStarted}
+              label="Get Started"
+              textClassName="text-base font-bold"
+              buttonClassName="w-full items-center rounded-lg py-4"
+              containerClassName=""
+            />
+          </View>
         </View>
       </View>
     </ScrollView>

@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
 import Header from 'components/header';
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
 
 export default function VerifyPhoneNumber() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -56,7 +58,7 @@ export default function VerifyPhoneNumber() {
     //   return;
     // }
 
-    navigateTo("openAccountSuccess")
+    navigateTo('openAccountSuccess');
   };
 
   const handleResendCode = () => {
@@ -71,7 +73,10 @@ export default function VerifyPhoneNumber() {
       {/* Progress Bar */}
       <View className="px-6 pb-4 pt-12">
         <View className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
-          <View className="h-full rounded-full bg-[#157196]" style={{ width: '50%' }} />
+          <View
+            className={`h-full rounded-full `}
+            style={{ width: '50%', backgroundColor: Colors?.primary }}
+          />
         </View>
         <Text className="mt-2 text-center text-xs text-gray-600">Step 3 of 6</Text>
       </View>
@@ -118,10 +123,10 @@ export default function VerifyPhoneNumber() {
                 style={{
                   width: 48,
                   height: 56,
-                  backgroundColor: digit ? '#157196' : 'white',
-                  color: digit ? 'white' : '#157196',
+                  backgroundColor: digit ? Colors?.primary : 'white',
+                  color: digit ? 'white' : Colors?.primary,
                   borderWidth: 2,
-                  borderColor: '#157196',
+                  borderColor: Colors?.primary,
                 }}
               />
             ))}
@@ -133,7 +138,7 @@ export default function VerifyPhoneNumber() {
             <TouchableOpacity onPress={handleResendCode} disabled={timer > 0}>
               <Text
                 className="text-sm font-semibold"
-                style={{ color: timer > 0 ? '#157196' : '#9CA3AF' }}>
+                style={{ color: timer > 0 ? Colors?.primary : '#9CA3AF' }}>
                 Resend {formatTime(timer)}
               </Text>
             </TouchableOpacity>
@@ -143,11 +148,13 @@ export default function VerifyPhoneNumber() {
 
       {/* Continue Button */}
       <View className="px-6 pb-8">
-        <TouchableOpacity
+        <TouchBtn
           onPress={handleContinue}
-          className="w-full items-center rounded-lg bg-[#157196] py-4">
-          <Text className="text-base font-bold text-white">Continue</Text>
-        </TouchableOpacity>
+          label="Continue"
+          textClassName="text-base font-bold text-white"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
       </View>
     </View>
   );

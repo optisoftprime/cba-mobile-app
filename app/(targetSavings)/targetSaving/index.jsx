@@ -12,7 +12,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
+import WalletBalanceCard from 'components/walletCard';
 
 export default function TargetSavingsForm() {
   const [goalName, setGoalName] = useState('');
@@ -36,7 +38,7 @@ export default function TargetSavingsForm() {
     //   autoDebit,
     //   understood,
     // });
-    navigateTo("savingSummary")
+    navigateTo('savingSummary');
   };
 
   const handleSavingsPlansPress = () => {
@@ -51,22 +53,30 @@ export default function TargetSavingsForm() {
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        <Header title="Target Savings" onLeftPress={navigateBack} showLeftIcon={true} color='black' />
+        <Header
+          title="Target Savings"
+          onLeftPress={navigateBack}
+          showLeftIcon={true}
+          color="black"
+        />
 
-        <WalletCard
+        <WalletBalanceCard
           walletName="Target Savings Wallet"
           balance="₦0.00"
           description="5% Interest Rate"
-          descriptionBackground="white"
-          descriptionTextColor="text-gray-800"
-          backgroundColor="bg-yellow-600"
+          color="#B4872A" // yellow-600 equivalent
+          backgroundImagePath={require('../../../assets/Vector .png')}
           onDescriptionPress={handleSavingsPlansPress}
-          backgroundImagePath={require('../../../assets/Vector .png')} // Adjust path as needed
-          iconName="wallet" // Custom icon for target savings
-          iconSize={16}
-          iconColor="white"
-          balanceTextSize="text-4xl"
-          color="#B4872A"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={false}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={false}
+          containerClassName="mx-5 mb-8"
         />
 
         {/* Form Content */}
@@ -147,7 +157,7 @@ export default function TargetSavingsForm() {
           {/* Start Date Input */}
           <View className="mb-4">
             <Text className="mb-2 text-sm font-semibold text-gray-900">Start Date</Text>
-            <View className="flex-row items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
+            <View className="flex-row items-center rounded-lg border border-gray-300 bg-white px-4 ">
               <TextInput
                 className="flex-1 text-base text-gray-900"
                 value={startDate}
@@ -155,7 +165,7 @@ export default function TargetSavingsForm() {
                 placeholder="Select start date"
                 placeholderTextColor="#9CA3AF"
               />
-              <Ionicons name="calendar" size={20} color="#0E7490" />
+              <Ionicons name="calendar" size={20} color={Colors?.primary} />
             </View>
           </View>
 
@@ -173,8 +183,8 @@ export default function TargetSavingsForm() {
             <Switch
               value={autoDebit}
               onValueChange={setAutoDebit}
-              trackColor={{ false: '#D1D5DB', true: '#93C5FD' }}
-              thumbColor={autoDebit ? '#0E7490' : '#F3F4F6'}
+              trackColor={{ false: '#D1D5DB', true: Colors?.secondary }}
+              thumbColor={autoDebit ? Colors?.primary : '#F3F4F6'}
             />
           </View>
 
@@ -191,23 +201,30 @@ export default function TargetSavingsForm() {
           <View className="mb-8 flex-row items-center">
             <TouchableOpacity
               onPress={() => setUnderstood(!understood)}
-              className={`h-5 w-5 rounded border-2 ${
-                understood ? 'border-blue-600 bg-blue-600' : 'border-gray-400'
-              } items-center justify-center`}>
+              className="h-5 w-5 items-center justify-center rounded border-2"
+              style={{
+                borderColor: understood ? Colors?.primary : Colors?.secondary,
+                backgroundColor: understood ? Colors?.primary : 'transparent',
+              }}>
               {understood && <Ionicons name="checkmark" size={16} color="white" />}
             </TouchableOpacity>
-            <Text className="ml-3 text-sm text-gray-800">I understand, I can't withdraw early</Text>
+
+            <Text className="ml-3 text-sm" style={{ color: Colors?.secondary }}>
+              I understand, I can't withdraw early
+            </Text>
           </View>
         </View>
 
         {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold "
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

@@ -4,6 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import Dropdown from 'components/dropDown';
+import TouchBtn from 'components/touchBtn';
+import WalletBalanceCard from 'components/walletCard';
+import { Colors } from 'config/theme';
 
 export default function RizeSpringForm() {
   const [savingsType, setSavingsType] = useState('');
@@ -37,7 +40,7 @@ export default function RizeSpringForm() {
     //   sourceOfFunds,
     //   autoDebit,
     // });
-    navigateTo("rizeSpringsSavings")
+    navigateTo('rizeSpringsSavings');
   };
 
   return (
@@ -55,19 +58,21 @@ export default function RizeSpringForm() {
         />
 
         {/* Wallet Card */}
-        <View className="mx-5 mt-4 rounded-2xl bg-[#5B4570] p-5">
-          <View className="mb-2 flex-row items-center">
-            <Ionicons name="wallet-outline" size={16} color="white" />
-            <Text className="ml-2 text-sm text-white">Rize Spring Savings Wallet</Text>
-          </View>
-          <View className="flex-row items-center">
-            <Text className="text-4xl font-bold text-white">₦0.00</Text>
-            <Ionicons name="eye-outline" size={20} color="white" style={{ marginLeft: 8 }} />
-          </View>
-          <View className="mt-3 self-start rounded-full bg-white/20 px-3 py-1">
-            <Text className="text-xs text-white">6% Interest Rate</Text>
-          </View>
-        </View>
+        <WalletBalanceCard
+          color="#513B56"
+          description="Across 7 savings plans"
+          points="0 Points"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={true}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={false}
+          containerClassName="mx-5 mb-8"
+        />
 
         <View className="flex-1 px-5 pt-6">
           {/* Savings Types Dropdown */}
@@ -104,7 +109,7 @@ export default function RizeSpringForm() {
             <Text className="mb-2 text-sm font-semibold text-gray-900">Start Date</Text>
             <TouchableOpacity className="flex-row items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
               <Text className="flex-1 text-base text-gray-400">Select start date</Text>
-              <Ionicons name="calendar-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="calendar-outline" size={20} color={Colors?.primary} />
             </TouchableOpacity>
           </View>
 
@@ -113,7 +118,7 @@ export default function RizeSpringForm() {
             <Text className="mb-2 text-sm font-semibold text-gray-900">End Date</Text>
             <TouchableOpacity className="flex-row items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
               <Text className="flex-1 text-base text-gray-400">Select end date</Text>
-              <Ionicons name="calendar-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="calendar-outline" size={20} color={Colors?.primary} />
             </TouchableOpacity>
           </View>
 
@@ -137,20 +142,22 @@ export default function RizeSpringForm() {
             <Switch
               value={autoDebit}
               onValueChange={setAutoDebit}
-              trackColor={{ false: '#D1D5DB', true: '#4ADE80' }}
-              thumbColor={autoDebit ? '#22C55E' : '#F3F4F6'}
+              trackColor={{ false: '#D1D5DB', true: Colors?.secondary }}
+              thumbColor={autoDebit ? Colors?.primary : '#F3F4F6'}
             />
           </View>
         </View>
 
         {/* Continue Button */}
         <View className="px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold "
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

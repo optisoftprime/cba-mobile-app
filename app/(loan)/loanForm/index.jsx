@@ -4,8 +4,10 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
 import Dropdown from 'components/dropDown';
+import TouchBtn from 'components/touchBtn';
+import WalletBalanceCard from 'components/walletCard';
+import { Colors } from 'config/theme';
 
 export default function LoanApplicationForm() {
   const [loanAmount, setLoanAmount] = useState('');
@@ -64,19 +66,22 @@ export default function LoanApplicationForm() {
           color="black"
         />
 
-        <WalletCard
+        <WalletBalanceCard
           walletName="Loan Wallet"
           balance="₦0.00"
           description="5% Interest Rate"
-          descriptionBackground="white"
-          descriptionTextColor="text-gray-800"
-          backgroundColor="bg-purple-900"
           backgroundImagePath={require('../../../assets/Vector .png')}
-          iconName="wallet"
-          iconSize={16}
-          iconColor="white"
-          balanceTextSize="text-4xl"
           color="#4C1D95"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={false}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={false}
+          containerClassName="mx-5 mb-8"
         />
 
         {/* Form Content */}
@@ -143,12 +148,15 @@ export default function LoanApplicationForm() {
           <View className="mb-6 flex-row items-center">
             <TouchableOpacity
               onPress={() => setUnderstood(!understood)}
-              className={`h-5 w-5 rounded border-2 ${
-                understood ? 'border-[#157196] bg-[#157196]' : 'border-gray-400'
-              } items-center justify-center`}>
+              className="h-5 w-5 items-center justify-center rounded border-2"
+              style={{
+                borderColor: understood ? Colors?.primary : "black",
+                backgroundColor: understood ? Colors?.primary : 'transparent',
+              }}>
               {understood && <Ionicons name="checkmark" size={16} color="white" />}
             </TouchableOpacity>
-            <Text className="ml-3 text-sm text-gray-800">I understand, I can't withdraw early</Text>
+
+            <Text className="ml-3 text-sm">I understand, I can't withdraw early</Text>
           </View>
 
           {/* Total Loan Payable */}
@@ -164,12 +172,14 @@ export default function LoanApplicationForm() {
 
         {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold "
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

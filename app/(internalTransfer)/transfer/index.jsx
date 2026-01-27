@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
 
 export default function WalletToWalletTransfer() {
   const [walletNumber, setWalletNumber] = useState('');
@@ -13,7 +14,7 @@ export default function WalletToWalletTransfer() {
 
   const handleWalletNumberChange = (text) => {
     setWalletNumber(text);
-    
+
     // Simulate wallet number validation
     if (text.length >= 10) {
       setRecipientName('Abraham Mclawdon David');
@@ -105,12 +106,14 @@ export default function WalletToWalletTransfer() {
 
         {/* Continue Button - Fixed at Bottom */}
         <View className="px-4 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

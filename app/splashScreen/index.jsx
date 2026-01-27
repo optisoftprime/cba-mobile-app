@@ -5,11 +5,10 @@ import {
   SplashScreenBottomCurve,
   SplashScreenTopCurve,
 } from '../../svgs/splashScreen';
-import { Colors } from 'config/theme';
 
 export default function SplashScreen() {
   return (
-    <View className={`flex-1 bg-[${Colors.splashScreenBgColor}]`}>
+    <View className={`flex-1 bg-[#D4E8F5]`}>
       {/* Top SVG Wave */}
       <View className="flex items-end" style={{ transform: [{ rotate: '180deg' }] }}>
         <SplashScreenBottomCurve />

@@ -1,46 +1,54 @@
-// screens/CollateralLoanList.jsx
+// screens/ChildrenSavingsList.jsx
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
+import WalletBalanceCard from 'components/walletCard';
+import { Colors } from 'config/theme';
 
-export default function CollateralLoanList() {
-  const contributions = [
+export default function ChildrenSavingsList() {
+  const savings = [
     {
       id: 1,
-      contributedAmount: '₦10.00',
-      dateContributed: 'Monthly',
+      childName: 'David John',
+      targetAmount: '₦400,000',
+      totalSaved: '₦20,000',
       interestRate: '5%',
       status: 'Active',
-      progress: 65,
+      progress: 60,
     },
     {
       id: 2,
-      contributedAmount: '₦10.00',
-      dateContributed: 'Monthly',
+      childName: 'David John',
+      targetAmount: '₦400,000',
+      totalSaved: '₦20,000',
       interestRate: '5%',
       status: 'Active',
-      progress: 65,
+      progress: 60,
     },
     {
       id: 3,
-      contributedAmount: '₦10.00',
-      dateContributed: 'Monthly',
+      childName: 'David John',
+      targetAmount: '₦400,000',
+      totalSaved: '₦20,000',
       interestRate: '5%',
       status: 'Active',
-      progress: 65,
+      progress: 60,
     },
   ];
 
-  const handleMakeContribution = () => {
-    console.log('Make a Contribution pressed');
-    navigateTo('collateralLoanForm');
+  const handleWithdraw = () => {
+    console.log('Withdraw pressed');
   };
 
-  const handleViewDetails = (contributionId) => {
-    console.log('View details for contribution:', contributionId);
-    navigateTo('collateralLoanDetails', { id: contributionId });
+  const handleCreateChildSavings = () => {
+    console.log('Create Child Savings pressed');
+    // navigateTo('childSavingsForm');
+  };
+
+  const handleViewDetails = (savingId) => {
+    console.log('View details for saving:', savingId);
+    // navigateTo('childSavingsDetails', { id: savingId });
   };
 
   return (
@@ -49,72 +57,99 @@ export default function CollateralLoanList() {
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        <Header title="Collateral Loan Savings" onLeftPress={navigateBack} showLeftIcon={true} />
-        <WalletCard
-          walletName="Collateral Savings Wallet"
+        <Header
+          title="Children's Savings"
+          onLeftPress={navigateBack}
+          showLeftIcon={true}
+          color="black"
+        />
+
+        <WalletBalanceCard
+          walletName="Children Savings Wallet"
           balance="₦0.00"
           description="5% Interest Rate"
           backgroundImagePath={require('../../../assets/Vector .png')}
-          color="#A0522D"
+          color={Colors?.primary || '#157196'}
+          topRightText="Withdraw"
+          topRightAction={handleWithdraw}
+          topRightIcon="account-balance-wallet"
+          showWalletName={true}
+          showBalance={true}
+          showBalanceToggle={true}
+          showDescription={true}
+          showDescriptionButton={true}
+          showPoints={false}
+          showWalletNumber={false}
+          showCopyWallet={false}
+          showTopRightButton={true}
+          containerClassName="mx-5 mb-8"
         />
 
         <View className="px-4">
-          {/* Wallet Card */}
-
-          {/* Make a Contribution Button */}
-          <TouchableOpacity onPress={handleMakeContribution} className="mb-6 items-center py-3">
-            <Text className="text-sm font-semibold text-[#157196]">Make a Contribution</Text>
+          {/* Create Child Savings Button */}
+          <TouchableOpacity onPress={handleCreateChildSavings} className="mb-6 items-center py-3">
+            <Text className="text-sm font-semibold" style={{ color: Colors?.primary }}>
+              Create Child Savings
+            </Text>
           </TouchableOpacity>
 
-          {/* Contributions List */}
-          {contributions.map((contribution) => (
+          {/* Savings List */}
+          {savings.map((saving) => (
             <View
-              key={contribution.id}
+              key={saving.id}
               className="mb-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm">
               <View className="flex-row">
-                {/* Money Image */}
-                <View className="mr-4 h-28 w-28 items-center justify-center overflow-hidden rounded-xl">
+                {/* Book/Education Image */}
+                <View className="mr-4 h-28 w-28 items-center justify-center rounded-xl bg-blue-100">
                   <Image
                     source={require('../../../assets/Frame 427320095.png')}
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="cover"
+                    style={{ width: 112, height: 112 }}
+                    resizeMode="contain"
                   />
                 </View>
 
-                {/* Contribution Details */}
+                {/* Savings Details */}
                 <View className="flex-1">
-                  <Text className="mb-1 text-xs text-[#157196]">
-                    <Text className="font-semibold">Contributed Amount: </Text>
-                    {contribution.contributedAmount}
+                  <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
+                    <Text className="font-semibold">Child Name: </Text>
+                    {saving.childName}
                   </Text>
-                  <Text className="mb-1 text-xs text-[#157196]">
-                    <Text className="font-semibold">Date Contributed: </Text>
-                    {contribution.dateContributed}
+                  <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
+                    <Text className="font-semibold">Target Amount: </Text>
+                    {saving.targetAmount}
                   </Text>
-                  <Text className="mb-1 text-xs text-[#157196]">
+                  <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
+                    <Text className="font-semibold">Total Saved: </Text>
+                    {saving.totalSaved}
+                  </Text>
+                  <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
                     <Text className="font-semibold">Interest Rate: </Text>
-                    {contribution.interestRate}
+                    {saving.interestRate}
                   </Text>
-                  <Text className="mb-2 text-xs text-[#157196]">
+                  <Text className="mb-2 text-xs" style={{ color: Colors?.primary }}>
                     <Text className="font-semibold">Status: </Text>
-                    <Text className="text-green-600">{contribution.status}</Text>
+                    <Text className="text-green-600">{saving.status}</Text>
                   </Text>
 
                   {/* Progress Bar */}
                   <View className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200">
                     <View
-                      className="h-full bg-[#157196]"
-                      style={{ width: `${contribution.progress}%` }}
+                      className="h-full"
+                      style={{ 
+                        width: `${saving.progress}%`, 
+                        backgroundColor: Colors?.primary 
+                      }}
                     />
                   </View>
                   <Text className="mb-2 text-right text-xs font-semibold text-gray-700">
-                    {contribution.progress}%
+                    {saving.progress}%
                   </Text>
 
                   {/* View Details Button */}
                   <TouchableOpacity
-                    onPress={() => handleViewDetails(contribution.id)}
-                    className="items-center rounded-lg bg-[#157196] py-2">
+                    onPress={() => handleViewDetails(saving.id)}
+                    className="items-center rounded-lg py-2"
+                    style={{ backgroundColor: Colors?.primary }}>
                     <Text className="text-xs font-semibold text-white">View Savings Details</Text>
                   </TouchableOpacity>
                 </View>

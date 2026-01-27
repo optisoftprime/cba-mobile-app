@@ -4,6 +4,9 @@ import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from 'reac
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import { useLocalSearchParams } from 'expo-router';
+import TouchBtn from 'components/touchBtn';
+import { Colors } from 'config/theme';
+import { GlobalStatusBar } from 'config/statusBar';
 
 export default function OTPVerification() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -72,7 +75,8 @@ export default function OTPVerification() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: Colors?.background }}>
+      <GlobalStatusBar style={"dark-content"}/>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
@@ -118,10 +122,10 @@ export default function OTPVerification() {
               style={{
                 width: 45,
                 height: 56,
-                backgroundColor: digit ? '#0E7490' : 'white',
+                backgroundColor: digit ? Colors?.primary : 'white',
                 color: digit ? 'white' : '#0E7490',
                 borderWidth: 2,
-                borderColor: '#0E7490',
+                borderColor: Colors?.primary,
               }}
             />
           ))}
@@ -133,7 +137,7 @@ export default function OTPVerification() {
           <TouchableOpacity onPress={handleResendCode} disabled={timer > 0}>
             <Text
               className="text-sm font-semibold"
-              style={{ color: timer > 0 ? '#0E7490' : '#9CA3AF' }}>
+              style={{ color: timer > 0 ? Colors?.primary : '#9CA3AF' }}>
               Resend {formatTime(timer)}
             </Text>
           </TouchableOpacity>
@@ -141,13 +145,14 @@ export default function OTPVerification() {
 
         {/* Continue Button */}
         <View className="mt-auto px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg py-4"
-            style={{ backgroundColor: '#0E7490' }}
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

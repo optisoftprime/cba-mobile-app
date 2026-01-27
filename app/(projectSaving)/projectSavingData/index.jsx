@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
 
 export default function ProjectSavingsInfo() {
   const handleCreatePlan = () => {
@@ -24,9 +25,7 @@ export default function ProjectSavingsInfo() {
         </View>
 
         {/* Title */}
-        <Text className="mb-2 text-3xl font-bold text-white">
-          Save For Your Big{'\n'}Projects
-        </Text>
+        <Text className="mb-2 text-3xl font-bold text-white">Save For Your Big{'\n'}Projects</Text>
 
         {/* Benefits/Features Section */}
         <View className="mb-6">
@@ -71,13 +70,15 @@ export default function ProjectSavingsInfo() {
 
       {/* Create Plan Button - Fixed at bottom */}
       <View className="px-4 pb-8 pt-4">
-        <TouchableOpacity
+        <TouchBtn
           onPress={handleCreatePlan}
-          className="w-full items-center rounded-lg bg-white py-4">
-          <Text className="text-base font-bold" style={{ color: '#D97706' }}>
-            Create Plan
-          </Text>
-        </TouchableOpacity>
+          label="Create Plan"
+          backgroundColor="white"
+          textColor="#D97706" // amber-600 color
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
       </View>
     </View>
   );

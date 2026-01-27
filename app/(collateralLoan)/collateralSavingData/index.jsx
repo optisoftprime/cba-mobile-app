@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
 import { navigateTo } from 'app/navigate';
+import TouchBtn from 'components/touchBtn';
 
 export default function CollateralLoanInfo() {
   const handleStartSaving = () => {
@@ -81,13 +82,15 @@ export default function CollateralLoanInfo() {
 
       {/* Start Saving Button - Fixed at bottom */}
       <View className="px-4 pb-8 pt-4">
-        <TouchableOpacity
+        <TouchBtn
           onPress={handleStartSaving}
-          className="w-full items-center rounded-lg bg-white py-4">
-          <Text className="text-base font-bold" style={{ color: '#A0522D' }}>
-            Start Saving as Collateral
-          </Text>
-        </TouchableOpacity>
+          label="Start Saving as Collateral"
+          backgroundColor="white"
+          textColor="#A0522D" // sienna brown color
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
       </View>
     </View>
   );

@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
 import Dropdown from 'components/dropDown';
+import TouchBtn from 'components/touchBtn';
+import WalletBalanceCard from 'components/walletCard';
+import { Colors } from 'config/theme';
 
 export default function RizeCoopLoanForm() {
   const [loanAmount, setLoanAmount] = useState('');
@@ -55,16 +57,26 @@ export default function RizeCoopLoanForm() {
 
         {/* Wallet Card */}
         <View>
-          <WalletCard
+          <WalletBalanceCard
             walletName="RizeCoop Loan Wallet"
             balance="₦0.00"
             description="6% Interest Rate"
             backgroundImagePath={require('../../../assets/Vector .png')}
             color="#566D24"
+            showWalletName={true}
+            showBalance={true}
+            showBalanceToggle={true}
+            showDescription={true}
+            showDescriptionButton={true}
+            showPoints={false}
+            showWalletNumber={false}
+            showCopyWallet={false}
+            showTopRightButton={false}
+            containerClassName="mx-5 mb-8"
           />
         </View>
 
-        <View className="flex-1 px-5 pt-6">
+        <View className="flex-1 px-5">
           {/* Loan Amount */}
           <View className="mb-4">
             <Text className="mb-2 text-sm font-semibold text-gray-900">Loan Amount</Text>
@@ -120,7 +132,8 @@ export default function RizeCoopLoanForm() {
           <View className="mb-4 rounded-lg bg-blue-100 p-4">
             <Text className="mb-2 font-semibold text-gray-900">Info:</Text>
             <Text className="text-sm text-gray-700">
-              • Your ₦200,000 collateral will allow a loan up to ₦400,000 at lower interest rate. Your collateral is locked until full repayment
+              • Your ₦200,000 collateral will allow a loan up to ₦400,000 at lower interest rate.
+              Your collateral is locked until full repayment
             </Text>
           </View>
 
@@ -128,9 +141,15 @@ export default function RizeCoopLoanForm() {
           <TouchableOpacity
             onPress={() => setTermsAccepted(!termsAccepted)}
             className="mb-4 flex-row items-start">
-            <View className={`mr-3 h-5 w-5 rounded border-2 items-center justify-center ${termsAccepted ? 'border-[#157196] bg-[#157196]' : 'border-gray-300'}`}>
-              {termsAccepted && <Text className="text-white text-xs">✓</Text>}
+            <View
+              className="mr-3 h-5 w-5 items-center justify-center rounded border-2"
+              style={{
+                borderColor: termsAccepted ? Colors?.primary : Colors?.secondary,
+                backgroundColor: termsAccepted ? Colors?.primary : 'transparent',
+              }}>
+              {termsAccepted && <Text className="text-xs text-white">✓</Text>}
             </View>
+
             <Text className="flex-1 text-sm text-gray-700">
               By ticking this box you accept the terms & conditions
             </Text>
@@ -147,12 +166,14 @@ export default function RizeCoopLoanForm() {
 
         {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6">
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleContinue}
-            className="items-center rounded-lg bg-[#157196] py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          </TouchableOpacity>
+            label="Continue"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>

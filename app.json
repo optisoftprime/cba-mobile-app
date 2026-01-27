@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "rizespring",
+    "name": "Rize Spring",
     "slug": "rizespring",
     "version": "1.0.0",
     "web": {
@@ -13,10 +13,10 @@
       "expo-router"
     ],
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/appImage.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/appImage.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -24,12 +24,34 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "UIStatusBarHidden": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/appImage.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.optisoft.rizespring",
+      "statusBar": {
+        "hidden": false,
+        "backgroundColor": "#ffffff",
+        "translucent": false,
+        "barStyle": "dark-content"
+      },
+      "navigationBar": {
+        "visible": "sticky-immersive",
+        "backgroundColor": "#ffffff",
+        "barStyle": "dark-content"
+      }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9529bf79-128d-467b-969d-39ee6c1129e3"
       }
     }
   }

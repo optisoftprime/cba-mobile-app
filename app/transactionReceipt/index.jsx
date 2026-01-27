@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { navigateBack } from 'app/navigate';
 import { Curves } from 'svgs/transactionReceiptCurve';
+import TouchBtn from 'components/touchBtn';
 
 export default function TransactionReceipt() {
   const receiptData = {
@@ -79,21 +80,29 @@ export default function TransactionReceipt() {
 
         {/* Action Buttons */}
         <View className="px-5 pb-6 pt-4" style={{ backgroundColor: '#157196' }}>
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleDownload}
-            className="mb-3 items-center rounded-lg bg-white py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold" style={{ color: '#157196' }}>
-              Download
-            </Text>
-          </TouchableOpacity>
+            label="Download"
+            backgroundColor="white"
+            textColor="#157196"
+            textClassName="text-base font-semibold"
+            buttonClassName="mb-3 items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
 
-          <TouchableOpacity
+          <TouchBtn
             onPress={handleShare}
-            className="items-center rounded-lg border-2 border-white py-4"
-            activeOpacity={0.8}>
-            <Text className="text-base font-semibold text-white">Share</Text>
-          </TouchableOpacity>
+            label="Share"
+            backgroundColor="transparent"
+            borderColor="white"
+            borderWidth={2}
+            textColor="white"
+            textClassName="text-base font-semibold"
+            buttonClassName="items-center rounded-lg py-4"
+            activeOpacity={0.8}
+            containerClassName=""
+          />
         </View>
       </ScrollView>
     </View>
