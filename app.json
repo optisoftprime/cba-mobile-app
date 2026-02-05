@@ -1,28 +1,33 @@
 {
   "expo": {
-    "name": "Rize Spring",
+    "name": "RizeSpring",
     "slug": "rizespring",
     "version": "1.0.0",
+
     "web": {
       "favicon": "./assets/favicon.png"
     },
+
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": [
-      "expo-router"
-    ],
+
+    "plugins": ["expo-router"],
+
     "orientation": "portrait",
-    "icon": "./assets/appImage.png",
+
+    "icon": "./assets/newAppLogo.jpeg",
+
     "userInterfaceStyle": "light",
+
     "splash": {
-      "image": "./assets/appImage.png",
+      "image": "./assets/newAppLogo.jpeg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+
+    "assetBundlePatterns": ["**/*"],
+
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -30,24 +35,29 @@
         "UIStatusBarHidden": false
       }
     },
+
     "android": {
+      "package": "com.optisoft.rizespring",
+
       "adaptiveIcon": {
-        "foregroundImage": "./assets/appImage.png",
+        "foregroundImage": "./assets/newAppLogo.jpeg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.optisoft.rizespring",
+
       "statusBar": {
         "hidden": false,
         "backgroundColor": "#ffffff",
         "translucent": false,
         "barStyle": "dark-content"
       },
+
       "navigationBar": {
         "visible": "sticky-immersive",
         "backgroundColor": "#ffffff",
         "barStyle": "dark-content"
       }
     },
+
     "extra": {
       "router": {},
       "eas": {

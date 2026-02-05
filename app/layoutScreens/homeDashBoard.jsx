@@ -27,7 +27,7 @@ export default function HomePage() {
       icon: 'card',
       color: '#E9D5FF',
       iconColor: '#7C3AED',
-      link: 'fixedDepositData',
+      link: 'profileSettings',
     },
     {
       name: 'Utilities',
