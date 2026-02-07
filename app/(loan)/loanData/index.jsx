@@ -76,7 +76,7 @@ export default function LoanInfo() {
       <View className="px-4 pb-8 pt-4">
         <TouchBtn
           onPress={handleStartFixedDeposit}
-          label="Start Fixed Deposit"
+          label="Start Loan Application"
           backgroundColor="white"
           textColor="#4C1D95" // purple-900 color
           textClassName="text-base font-bold"

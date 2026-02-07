@@ -4,7 +4,6 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import WalletCard from 'components/walletBox';
 import Dropdown from 'components/dropDown';
 import TouchBtn from 'components/touchBtn';
 import WalletBalanceCard from 'components/walletCard';

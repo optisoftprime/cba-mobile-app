@@ -47,7 +47,7 @@ export default function SavingsPage() {
     description: 'Automatic, daily, weekly, or monthly savings',
     color: '#FFFBEB',
     imagePath: require('../../assets/image 62.png'),
-    // link: 'fixedDeposit',  Add a link if you want it to navigate
+    link: 'fixedDepositData', 
   };
 
   // Function to handle navigation to savings plan details
@@ -70,7 +70,7 @@ export default function SavingsPage() {
   return (
     <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <Header title={'My Savings'} showLeftIcon={false} color="black" />
+      <Header title={'My Savings'} showLeftIcon={true} color="black" />
 
       {/* Wallet Balance Card Component */}
       <WalletBalanceCard
