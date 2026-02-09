@@ -61,6 +61,8 @@ export default function Header({
         )}
       </View>
 
+      
+
       {/* Subtitle - Centered */}
       {subtitle && (
         <Text className="mt-5 px-4 text-center text-sm leading-5 text-gray-600">{subtitle}</Text>

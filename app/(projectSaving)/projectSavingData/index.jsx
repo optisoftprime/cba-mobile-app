@@ -18,7 +18,7 @@ export default function ProjectSavingsInfo() {
         {/* Hero Image Card */}
         <View className="mb-6 overflow-hidden rounded-3xl bg-white">
           <Image
-            source={require('../../../assets/image 51.png')}
+            source={require('../../../assets/Frame 2147223550 (1).png')}
             style={{ width: '100%', height: 180 }}
             resizeMode="cover"
           />

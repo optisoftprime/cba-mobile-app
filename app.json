@@ -16,12 +16,12 @@
 
     "orientation": "portrait",
 
-    "icon": "./assets/newAppLogo.jpeg",
+    "icon": "./assets/appLogo.png",
 
     "userInterfaceStyle": "light",
 
     "splash": {
-      "image": "./assets/newAppLogo.jpeg",
+      "image": "./assets/appLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -40,7 +40,7 @@
       "package": "com.optisoft.rizespring",
 
       "adaptiveIcon": {
-        "foregroundImage": "./assets/newAppLogo.jpeg",
+        "foregroundImage": "./assets/appLogo.png",
         "backgroundColor": "#ffffff"
       },
 

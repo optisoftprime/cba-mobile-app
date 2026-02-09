@@ -6,6 +6,7 @@ import Profile from 'app/layoutScreens/profile';
 import { useLocalSearchParams } from 'expo-router';
 import ScreenNotReady from 'app/layoutScreens/notReady';
 import { navigateTo } from 'app/navigate';
+import SupportScreen from 'app/layoutScreens/supportScreen';
 
 export default function HomeLayout() {
   const { screen } = useLocalSearchParams();
@@ -33,7 +34,7 @@ export default function HomeLayout() {
         setActiveTab('Home');
         return null;
       case 'Support':
-        return <ScreenNotReady />;
+        return <SupportScreen />;
       default:
         return <HomePage />;
     }
