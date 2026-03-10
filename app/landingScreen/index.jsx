@@ -1,34 +1,41 @@
 // screens/WelcomeScreen.jsx
 import { navigateTo } from 'app/navigate';
-import React from 'react';
-import { View, Text, ImageBackground } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, ImageBackground, Alert, BackHandler } from 'react-native';
 import TouchBtn from 'components/touchBtn';
 import { Colors } from 'config/theme';
 import { GlobalStatusBar } from 'config/statusBar';
+import { useFocusEffect } from 'expo-router';
 
 export default function WelcomeScreen() {
-  const handleLogin = () => {
-    navigateTo('login');
+  const handleLogin = () => navigateTo('login');
+  const handleRegister = () => navigateTo('registrationSteps');
+  const handleOpenAccount = () => navigateTo('openNewAccount');
+  const handleHelp = () => console.log('Navigate to Help');
+
+  const handleQuit = () => {
+    Alert.alert('Exit App', 'Are you sure you want to quit?', [
+      { text: 'No', style: 'cancel' },
+      { text: 'Yes', style: 'destructive', onPress: () => BackHandler.exitApp() },
+    ]);
   };
 
-  const handleRegister = () => {
-    navigateTo('registrationSteps');
-  };
-
-  const handleOpenAccount = () => {
-    navigateTo('openNewAccount');
-  };
-
-  const handleHelp = () => {
-    console.log('Navigate to Help');
-  };
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleQuit();
+        return true;
+      });
+      return () => backHandler.remove();
+    }, [])
+  );
 
   return (
     <ImageBackground
       source={require('../../assets/iPhone 13 mini - 1562.png')}
       className="flex-1"
       resizeMode="cover">
-      <GlobalStatusBar />
+      <GlobalStatusBar style={'white-content'} />
 
       <View className="flex-1 bg-black/40">
         <View className="flex-1 justify-between px-5 pb-10 pt-16">
@@ -44,7 +51,6 @@ export default function WelcomeScreen() {
 
           {/* Buttons Section */}
           <View className="w-full">
-            {/* Login Button */}
             <TouchBtn
               onPress={handleLogin}
               label="Login"
@@ -56,18 +62,16 @@ export default function WelcomeScreen() {
               containerClassName=""
             />
 
-            {/* Register Button */}
             <TouchBtn
               onPress={handleRegister}
               label="Register"
-              backgroundColor="rgba(255, 255, 255, 0.25)" // white/25
+              backgroundColor="rgba(255, 255, 255, 0.25)"
               textClassName="text-base font-semibold"
               buttonClassName="mb-6 items-center rounded-lg py-4"
               activeOpacity={0.8}
               containerClassName=""
             />
 
-            {/* Bottom Links */}
             <View className="flex-row justify-between px-1">
               <TouchBtn
                 onPress={handleOpenAccount}

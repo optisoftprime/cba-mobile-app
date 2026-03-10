@@ -21,6 +21,9 @@ const TextInputComponent = ({
   secureTextEntry = false,
   onToggleSecureTextEntry,
 
+  // Loading state
+  isLoading = false,
+
   // Custom styles
   containerStyle = {},
   labelStyle = {},
@@ -52,7 +55,6 @@ const TextInputComponent = ({
   style,
   ...props
 }) => {
-  // Handle icon click
   const handleIconPress = () => {
     if (showPasswordToggle && onToggleSecureTextEntry) {
       onToggleSecureTextEntry();
@@ -61,86 +63,66 @@ const TextInputComponent = ({
     }
   };
 
-  // Determine which icon to show for password
-  const getPasswordIconName = () => {
-    return secureTextEntry ? 'eye' : 'eye-off';
-  };
-
-  // Get the actual icon to display
-  const getIconName = () => {
-    if (showPasswordToggle) {
-      return getPasswordIconName();
-    }
-    return iconName;
-  };
-
-  // Check if we have any icon
+  const getPasswordIconName = () => (secureTextEntry ? 'eye' : 'eye-off');
+  const getIconName = () => (showPasswordToggle ? getPasswordIconName() : iconName);
   const hasIcon = iconName || showPasswordToggle;
 
-  // Determine actual colors to use
   const actualLabelColor = labelColor || defaultLabelColor;
   const actualTextColor = textColor || defaultTextColor;
 
-  // Calculate padding based on icon position
   const getInputPadding = () => {
     if (!hasIcon) return {};
-
-    if (iconPosition === 'left') {
-      return { paddingLeft: 48 }; // 12 * 4
-    } else if (iconPosition === 'right') {
-      return { paddingRight: 48 };
-    }
+    if (iconPosition === 'left') return { paddingLeft: 48 };
+    if (iconPosition === 'right') return { paddingRight: 48 };
     return {};
   };
 
-  // Get icon position style
   const getIconPositionStyle = () => {
-    if (iconPosition === 'left') {
-      return { left: 16 }; // left-4
-    } else if (iconPosition === 'right') {
-      return { right: 16 };
-    }
+    if (iconPosition === 'left') return { left: 16 };
+    if (iconPosition === 'right') return { right: 16 };
     return {};
   };
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {/* Label - EXACT match to your original */}
       {label && (
-        <Text style={[styles.label, { color: actualLabelColor }, labelStyle]}>{label}</Text>
+        <Text
+          style={[styles.label, { color: isLoading ? '#9CA3AF' : actualLabelColor }, labelStyle]}>
+          {label}
+        </Text>
       )}
 
-      {/* Input Container - No extra wrapper styles */}
-      <View>
-        {/* Icon - Left Position */}
+      <View style={isLoading ? styles.loadingOverlay : null}>
+        {/* Icon - Left */}
         {hasIcon && iconPosition === 'left' && (
           <TouchableOpacity
             onPress={handleIconPress}
             style={[styles.icon, getIconPositionStyle(), iconContainerStyle]}
             activeOpacity={0.7}
-            disabled={!onIconPress && !showPasswordToggle}>
+            disabled={(!onIconPress && !showPasswordToggle) || isLoading}>
             <IconComponent
               name={getIconName()}
               size={iconSize}
-              color={iconColor}
-              style={iconContainerStyle}
+              color={isLoading ? '#9CA3AF' : iconColor}
             />
           </TouchableOpacity>
         )}
 
-        {/* Text Input - EXACT match to your original */}
         <RNTextInput
           value={value}
           onChangeText={onChangeText}
           placeholderTextColor={placeholderTextColor}
           secureTextEntry={secureTextEntry}
+          editable={!isLoading}
           style={[
             styles.input,
             getInputPadding(),
             {
               borderColor: error ? errorBorderColor : defaultBorderColor,
               fontSize: defaultFontSize,
-              color: actualTextColor,
+              color: isLoading ? '#9CA3AF' : actualTextColor,
+              backgroundColor: isLoading ? '#F3F4F6' : 'transparent',
+              opacity: isLoading ? 0.7 : 1,
             },
             inputStyle,
             style,
@@ -148,25 +130,23 @@ const TextInputComponent = ({
           {...props}
         />
 
-        {/* Icon - Right Position */}
+        {/* Icon - Right */}
         {hasIcon && iconPosition === 'right' && (
           <TouchableOpacity
             onPress={handleIconPress}
             style={[styles.icon, getIconPositionStyle(), iconContainerStyle]}
             activeOpacity={0.7}
-            disabled={!onIconPress && !showPasswordToggle}>
+            disabled={(!onIconPress && !showPasswordToggle) || isLoading}>
             <IconComponent
               name={getIconName()}
               size={iconSize}
-              color={iconColor}
-              style={iconContainerStyle}
+              color={isLoading ? '#9CA3AF' : iconColor}
             />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Error Message */}
-      {error && (
+      {error && !isLoading && (
         <Text style={[styles.error, { color: errorBorderColor }, errorStyle]}>{error}</Text>
       )}
     </View>
@@ -175,29 +155,31 @@ const TextInputComponent = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24, // This is the ONLY difference - your original has mb-6 (24px)
-    // If you want NO margin, change this to 0
+    marginBottom: 24,
   },
   label: {
-    marginBottom: 8, // mb-2 = 8px
-    fontSize: 14, // text-sm
-    fontWeight: '600', // font-semibold
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: '600',
   },
   input: {
-    borderRadius: 8, // rounded-lg
+    borderRadius: 8,
     borderWidth: 1,
-    paddingHorizontal: 16, // px-4 = 16px
-    paddingVertical: 12, // py-3 = 12px
-    fontSize: 16, // text-base
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
   },
   icon: {
     position: 'absolute',
-    top: 12, // Align with input padding
+    top: 12,
     zIndex: 10,
   },
   error: {
-    marginTop: 4, // mt-1
-    fontSize: 14, // text-sm
+    marginTop: 4,
+    fontSize: 14,
+  },
+  loadingOverlay: {
+    opacity: 0.6,
   },
 });
 

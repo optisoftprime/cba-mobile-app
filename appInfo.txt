@@ -1,0 +1,3 @@
+Async values to know
+appState ==  this is used to manage where the app currenltly is incase the user coses it and needs to continue from where they left off
+app == stores data like has the user opened the app before 

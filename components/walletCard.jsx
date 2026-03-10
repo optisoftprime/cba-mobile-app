@@ -12,12 +12,14 @@ const WalletBalanceCard = ({
   description = 'Across 7 savings plans',
   points = '0 Points',
   walletNumber = '',
+  referralCount = null,
 
   // Styling props
   color = Colors?.primary || '#157196',
   backgroundImagePath = require('../assets/Vector .png'),
+  moneyImagePath = null,
 
-  // Visibility props (toggle which sections to show)
+  // Visibility props
   showWalletName = true,
   showBalance = true,
   showBalanceToggle = true,
@@ -27,18 +29,27 @@ const WalletBalanceCard = ({
   showWalletNumber = true,
   showCopyWallet = true,
   showTopRightButton = false,
+  showTopRightBadge = false,
   showBackgroundImage = true,
+  showMoneyImage = false,
+  showShareButton = false,
+  showWithdrawButton = false, // New: for withdraw button inside card
 
-  // Top right button props
+  // Top right button/badge props
   topRightText,
   topRightAction,
   topRightIcon = 'account-balance-wallet',
   topRightIconSize = 14,
 
+  // Withdraw button props
+  withdrawText = 'Withdraw',
+  onWithdraw,
+
   // Callbacks
   onDescriptionPress,
   onCopyWallet,
   onToggleBalance,
+  onShareWallet,
 
   // Container styling
   containerClassName = 'mx-5 mb-8',
@@ -61,15 +72,20 @@ const WalletBalanceCard = ({
     }
   };
 
+  const handleShareWallet = () => {
+    if (onShareWallet) {
+      onShareWallet(walletNumber);
+    }
+  };
+
   const displayBalance = isBalanceVisible ? balance : '••••••';
 
   return (
     <View className={containerClassName}>
       <View
-        className="relative overflow-hidden rounded-2xl px-5 py-3"
+        className="relative overflow-hidden rounded-2xl px-5 py-4"
         style={{
           backgroundColor: color,
-          // Figma shadow
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.25,
@@ -77,11 +93,21 @@ const WalletBalanceCard = ({
           elevation: 4,
         }}>
         {/* Background Image (Optional) */}
-        {showBackgroundImage && backgroundImagePath && (
+        {showBackgroundImage && backgroundImagePath && !showMoneyImage && (
           <Image
             source={backgroundImagePath}
             className="absolute bottom-0 right-0 opacity-30"
             style={{ width: 150, height: 120 }}
+          />
+        )}
+
+        {/* Money Image (Optional) */}
+        {showMoneyImage && moneyImagePath && (
+          <Image
+            source={moneyImagePath}
+            className="absolute bottom-0 right-0"
+            style={{ width: 180, height: 160 }}
+            resizeMode="contain"
           />
         )}
 
@@ -101,6 +127,15 @@ const WalletBalanceCard = ({
           </TouchableOpacity>
         )}
 
+        {/* Top Right Badge (for "3 Referrals") */}
+        {showTopRightBadge && referralCount !== null && (
+          <View className="absolute right-4 top-4 rounded-full bg-white px-3 py-2">
+            <Text className="text-xs font-semibold" style={{ color: color }}>
+              {referralCount} {referralCount === 1 ? 'Referral' : 'Referrals'}
+            </Text>
+          </View>
+        )}
+
         {/* Wallet Name (Optional) */}
         {showWalletName && (
           <View className="mb-3 flex-row items-center justify-between">
@@ -116,7 +151,7 @@ const WalletBalanceCard = ({
 
         {/* Balance Section */}
         {showBalance && (
-          <View className="mb-4 flex-row items-center justify-start gap-5">
+          <View className="mb-4 flex-row items-center justify-start gap-3">
             <Text className="text-4xl font-bold text-white">
               {isHidden ? '••••••••' : displayBalance}
             </Text>
@@ -130,36 +165,67 @@ const WalletBalanceCard = ({
           </View>
         )}
 
+        {/* Bottom Section with Wallet Number and Withdraw */}
+        <View className="flex-row items-center justify-between gap-2">
+          {/* Wallet Number with Copy and Share */}
+          {showWalletNumber && walletNumber && (
+            <View className="flex-row items-center rounded-full bg-white px-4 py-2">
+              <Text className="mr-2 text-xs font-semibold text-gray-800">{walletNumber}</Text>
+
+              {/* Copy Button */}
+              {showCopyWallet && (
+                <TouchableOpacity onPress={handleCopyWallet} className="mr-2">
+                  <Ionicons name="copy-outline" size={16} color={color} />
+                </TouchableOpacity>
+              )}
+
+              {/* Share Button */}
+              {showShareButton && (
+                <TouchableOpacity onPress={handleShareWallet}>
+                  <Ionicons name="share-social-outline" size={16} color={color} />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* Withdraw Button */}
+          {showWithdrawButton && onWithdraw && (
+            <TouchableOpacity
+              onPress={onWithdraw}
+              className="flex-row items-center rounded-lg border-2 border-white bg-transparent px-4 py-2">
+              <MaterialIcons name="account-balance-wallet" size={16} color="white" />
+              <Text className="ml-1 text-xs font-semibold text-white">{withdrawText}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Description Button (Optional) */}
         {showDescription && showDescriptionButton && (
           <TouchableOpacity
-            className="self-start rounded-full bg-white px-4 py-2"
+            className="mt-3 self-start rounded-full bg-white px-4 py-2"
             onPress={onDescriptionPress}>
             <Text className="text-xs font-semibold text-gray-800">{description}</Text>
           </TouchableOpacity>
         )}
 
         {/* Description Text only (Optional) */}
-        {showDescription && !showDescriptionButton && (
+        {showDescription && !showDescriptionButton && !showWalletNumber && (
           <Text className="mt-2 text-sm text-white/90">{description}</Text>
         )}
 
-        {/* Wallet Number Section (Optional) */}
-        {showWalletNumber && walletNumber && (
-          <View className="mt-42 ml-auto">
-            <Text className="mb-1 text-right text-xs text-white/80">Account Number</Text>
-            <View className="flex-row items-center justify-end">
-              <Text className="text-base font-semibold text-white">{walletNumber}</Text>
-
-              {/* Copy Button (Optional) */}
-              {showCopyWallet && (
-                <TouchableOpacity className="ml-2" onPress={handleCopyWallet}>
-                  <Ionicons name="copy-outline" size={18} color="white" />
-                </TouchableOpacity>
-              )}
+        {/* Old Wallet Number Section (for backward compatibility) */}
+        {showWalletNumber &&
+          walletNumber &&
+          !showWithdrawButton &&
+          !showShareButton &&
+          !showCopyWallet && (
+            <View className="mt-4 ml-auto">
+              <Text className="mb-1 text-right text-xs text-white/80">Account Number</Text>
+              <View className="flex-row items-center justify-end">
+                <Text className="text-base font-semibold text-white">{walletNumber}</Text>
+              </View>
             </View>
-          </View>
-        )}
+          )}
       </View>
     </View>
   );

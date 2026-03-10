@@ -40,7 +40,7 @@ export default function SecuritySettings() {
   return (
     <View className="flex-1">
       <Header
-        title="Security Settings"
+        title="Self Serive"
         onLeftPress={navigateBack}
         showLeftIcon={true}
         color="black"

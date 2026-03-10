@@ -1,7 +1,7 @@
 // screens/TwoFactorAuthentication.jsx
 import React, { useState } from 'react';
 import { View, Text, Switch } from 'react-native';
-import { navigateBack } from 'app/navigate';
+import { navigateBack, navigateTo } from 'app/navigate';
 import Header from 'components/header';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,6 +9,7 @@ export default function TwoFactorAuthentication() {
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
 
   const handleToggleTwoFactor = (value) => {
+    navigateTo('selecttwoFa');
     setIsTwoFactorEnabled(value);
     console.log('Two Factor Authentication enabled:', value);
     // Implement 2FA setup here
@@ -34,9 +35,7 @@ export default function TwoFactorAuthentication() {
               <Text className="mb-1 text-base font-semibold text-gray-900">
                 Enable Two Factor Authenti...
               </Text>
-              <Text className="text-xs text-gray-500">
-                Set your 2 factor authentication
-              </Text>
+              <Text className="text-xs text-gray-500">Set your 2 factor authentication</Text>
             </View>
           </View>
 

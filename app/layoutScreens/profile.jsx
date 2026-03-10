@@ -21,13 +21,13 @@ export default function Profile() {
       subtitle: 'View your wallet balance, linked account',
       // onPress: () => navigateTo('linkedAccounts'),
     },
-    {
-      id: 'security',
-      icon: 'lock-closed-outline',
-      title: 'Security Settings',
-      subtitle: 'Set your security PIN for your account',
-      onPress: () => navigateTo('securitySetting'),
-    },
+    // {
+    //   id: 'security',
+    //   icon: 'lock-closed-outline',
+    //   title: 'Security Settings',
+    //   subtitle: 'Set your security PIN for your account',
+    //   onPress: () => navigateTo('securitySetting'),
+    // },
     {
       id: 'app_settings',
       icon: 'grid-outline',

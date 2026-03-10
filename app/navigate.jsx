@@ -1,4 +1,4 @@
-// utils/navigation.js (or helpers/navigation.js)
+// utils/navigation.js
 import { router } from 'expo-router';
 import { Alert } from 'react-native';
 
@@ -14,11 +14,15 @@ export function navigateTo(path, params = {}) {
   }
 }
 
-export function navigateBack() {
+export function navigateBack(fallback = 'landingScreen') {
   try {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(fallback);
+    }
   } catch (error) {
-    Alert.alert('Navigation error', error?.message || 'Unable to navigate back');
+    router.replace(fallback);
   }
 }
 

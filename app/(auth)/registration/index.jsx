@@ -8,54 +8,62 @@ import TouchBtn from 'components/touchBtn';
 import { Colors } from 'config/theme';
 import TextInputComponent from 'components/textInputs';
 import { GlobalStatusBar } from 'config/statusBar';
+import { initiate } from 'api/auth';
+import Toast from 'react-native-toast-message';
 
 export default function RegistrationForm() {
   const [accountNumber, setAccountNumber] = useState('');
   const [isAgreed, setIsAgreed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = () => {
-    console.log('Account Number:', accountNumber);
-    console.log('Terms Agreed:', isAgreed);
-    navigateTo('otp');
+  const isFormReady = accountNumber.replace(/\s/g, '').length === 10 && isAgreed;
+
+  const handleContinue = async () => {
+    setIsLoading(true);
+    const cleanedAccountNumber = accountNumber.replace(/\s/g, '').trim();
+    const response = await initiate(null, { accountNumber: cleanedAccountNumber });
+
+    if (response?.ok) {
+      const phoneNumber = response?.data?.data?.phoneNumber;
+      navigateTo('otp', { phoneNumber, nextScreen: 'registrationSteps' });
+    } else {
+      Toast.show({ type: 'error', text1: 'Failed', text2: response?.message || 'Something went wrong' });
+    }
+
+    setIsLoading(false);
   };
 
-  const toggleCheckbox = () => {
-    setIsAgreed(!isAgreed);
-    console.log('Checkbox toggled:', !isAgreed);
-  };
+  const toggleCheckbox = () => setIsAgreed(!isAgreed);
+
+  function goBack() {
+    navigateBack();
+  }
 
   return (
-    <View className="flex-1" style={{backgroundColor:Colors?.background}}>
+    <View className="flex-1" style={{ backgroundColor: Colors?.background }}>
       <GlobalStatusBar style="dark-content" />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        <Header
-          title="Registration"
-          onLeftPress={() => {
-            navigateBack();
-          }}
-          showLeftIcon={true}
-        />
+        <Header title="Registration" onLeftPress={goBack} showLeftIcon={true} />
 
-        {/* Form Content */}
         <View className="flex-1 px-5">
-          {/* Account Number Input - Remove the wrapper mb-6 since component adds it */}
           <TextInputComponent
             label="Account Number"
             value={accountNumber}
             onChangeText={setAccountNumber}
             placeholder="Enter account number"
             keyboardType="numeric"
-            // The component already adds mb-6 (24px) margin, so don't wrap it in another mb-6
+            maxLength={10}
+            isLoading={isLoading}
           />
 
-          {/* Terms & Conditions Checkbox */}
           <TouchableOpacity
             onPress={toggleCheckbox}
             className="mb-6 flex-row items-start"
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            disabled={isLoading}>
             <View
               className="mr-3 mt-0.5 h-5 w-5 items-center justify-center rounded"
               style={{
@@ -72,10 +80,12 @@ export default function RegistrationForm() {
           </TouchableOpacity>
         </View>
 
-        {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6 pt-4">
           <TouchBtn
             onPress={handleContinue}
+            isLoading={isLoading}
+            loadingText="Please wait..."
+            disabled={!isFormReady}
             label="Continue"
             textClassName="text-base font-semibold"
             buttonClassName="items-center rounded-lg py-4"

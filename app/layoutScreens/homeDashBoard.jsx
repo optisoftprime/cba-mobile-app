@@ -27,7 +27,7 @@ export default function HomePage() {
       icon: 'card',
       color: '#E9D5FF',
       iconColor: '#7C3AED',
-      link: 'profileSettings',
+      link: 'securitySetting',
     },
     {
       name: 'Utilities',
@@ -44,6 +44,7 @@ export default function HomePage() {
       points: '3,450 points',
       color: '#A16207',
       bgColor: '#CA8A04',
+      link:"referal"
     },
     {
       title: 'Cashback',
@@ -116,8 +117,9 @@ export default function HomePage() {
         <Text className="mb-3 text-base font-semibold text-gray-800">Goodies</Text>
         <View className="flex-row justify-between">
           {goodies.map((goodie, index) => (
-            <View
+            <TouchableOpacity
               key={index}
+              onPress={(()=>{navigateTo(goodie?.link)})}
               className="mr-2 flex-1 rounded-xl p-4"
               style={{ backgroundColor: goodie.bgColor }}>
               <Ionicons name={index === 0 ? 'gift' : 'cash'} size={24} color="white" />
@@ -133,7 +135,7 @@ export default function HomePage() {
                   </Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </View>
