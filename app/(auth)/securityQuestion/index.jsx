@@ -9,6 +9,7 @@ import { getSecurityQuestions } from 'api/auth';
 import { useLocalSearchParams } from 'expo-router';
 import { save } from 'config/storage';
 import { GlobalStatusBar } from 'config/statusBar';
+import { Colors } from 'config/theme';
 
 const securityQuestions = [
   { label: 'What is your favourite food?', value: 'favourite_food' },
@@ -67,7 +68,7 @@ export default function SecurityQuestions() {
   }, []);
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white"  style={{ backgroundColor: Colors?.background }}>
       <GlobalStatusBar style="dark-content" />
 
       <ScrollView
