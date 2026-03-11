@@ -1,12 +1,15 @@
 // screens/SecurityQuestions.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, ScrollView, Text, TextInput } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import Dropdown from 'components/dropDown';
 import TouchBtn from 'components/touchBtn';
+import { getSecurityQuestions } from 'api/auth';
+import { useLocalSearchParams } from 'expo-router';
+import { save } from 'config/storage';
+import { GlobalStatusBar } from 'config/statusBar';
 
-// Sample security questions
 const securityQuestions = [
   { label: 'What is your favourite food?', value: 'favourite_food' },
   { label: 'What is your first car?', value: 'first_car' },
@@ -22,6 +25,8 @@ export default function SecurityQuestions() {
   const [question1, setQuestion1] = useState('');
   const [answer1, setAnswer1] = useState('');
   const [showDropdown1, setShowDropdown1] = useState(false);
+  // also remeber to add the alert are you sure you want to quit youll have to start all over like the over  screens
+  // alo to clear the asyn for this saved scren at the right place
 
   const [question2, setQuestion2] = useState('');
   const [answer2, setAnswer2] = useState('');
@@ -31,23 +36,44 @@ export default function SecurityQuestions() {
   const [answer3, setAnswer3] = useState('');
   const [showDropdown3, setShowDropdown3] = useState(false);
 
+  const params = useLocalSearchParams();
+
   const handleContinue = () => {
-    console.log('Security Question 1:', question1);
-    console.log('Answer 1:', answer1);
-    console.log('Security Question 2:', question2);
-    console.log('Answer 2:', answer2);
-    console.log('Security Question 3:', question3);
-    console.log('Answer 3:', answer3);
     navigateTo('setTransactionPin');
   };
 
+  useEffect(() => {
+    save('appState', {
+      stage: 'securityQuestion',
+      params: {
+        accountNumber: params?.accountNumber,
+        username: params?.username,
+      },
+    });
+  }, []);
+
+  //   setInterval(()=>{
+  // console.log(params)
+  // {"accountNumber": "4179345591", "username": "isrealgab3"}
+  //   },2500)
+
+  async function fetchQuestions() {
+    const response = await getSecurityQuestions({ username: params?.username });
+    console.log('Security Questions Response:', JSON.stringify(response, null, 2));
+  }
+
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
+
   return (
     <View className="flex-1 bg-white">
+      <GlobalStatusBar style="dark-content" />
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <Header
           title="Secure your Access"
           onLeftPress={navigateBack}
@@ -55,9 +81,7 @@ export default function SecurityQuestions() {
           subtitle="Set your security questions to protect your profile"
         />
 
-        {/* Form Content */}
         <View className="flex-1 px-5 pt-2">
-          {/* Security Question 1 */}
           <Dropdown
             label="Security Question 1"
             placeholder="Security Question 1"
@@ -71,7 +95,6 @@ export default function SecurityQuestions() {
             onToggle={() => setShowDropdown1(!showDropdown1)}
           />
 
-          {/* Answer 1 */}
           <View className="mb-4">
             <Text className="mb-2 text-sm font-semibold text-gray-900">Answer</Text>
             <TextInput
@@ -83,7 +106,6 @@ export default function SecurityQuestions() {
             />
           </View>
 
-          {/* Security Question 2 */}
           <Dropdown
             label="Security Question 2"
             placeholder="Security Question 2"
@@ -97,7 +119,6 @@ export default function SecurityQuestions() {
             onToggle={() => setShowDropdown2(!showDropdown2)}
           />
 
-          {/* Answer 2 */}
           <View className="mb-4">
             <Text className="mb-2 text-sm font-semibold text-gray-900">Answer</Text>
             <TextInput
@@ -109,7 +130,6 @@ export default function SecurityQuestions() {
             />
           </View>
 
-          {/* Security Question 3 */}
           <Dropdown
             label="Security Question 3"
             placeholder="Security Question 3"
@@ -123,7 +143,6 @@ export default function SecurityQuestions() {
             onToggle={() => setShowDropdown3(!showDropdown3)}
           />
 
-          {/* Answer 3 */}
           <View className="mb-4">
             <Text className="mb-2 text-sm font-semibold text-gray-900">Answer</Text>
             <TextInput
@@ -136,7 +155,6 @@ export default function SecurityQuestions() {
           </View>
         </View>
 
-        {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6 pt-4">
           <TouchBtn
             onPress={handleContinue}

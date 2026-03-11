@@ -1,6 +1,15 @@
 // screens/OTPVerification.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, BackHandler } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Alert,
+  BackHandler,
+} from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import { useLocalSearchParams } from 'expo-router';
@@ -11,6 +20,7 @@ import { Colors } from 'config/theme';
 import { GlobalStatusBar } from 'config/statusBar';
 import Toast from 'react-native-toast-message';
 import { save, load } from 'config/storage';
+import { validateOtp } from 'api/auth';
 
 export default function OTPVerification() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -23,22 +33,17 @@ export default function OTPVerification() {
     console.log('OTP Screen Params:', JSON.stringify(params, null, 2));
   }, []);
 
-  // Save OTP stage when app backgrounds so user can resume
   useEffect(() => {
     save('appState', {
       stage: 'otp',
-      phoneNumber: params?.phoneNumber,
-      nextScreen: params?.nextScreen,
-      timerSnapshot: timer,
+      params: {
+        phoneNumber: params?.phoneNumber,
+        accountNumber: params?.accountNumber,
+        nextScreen: params?.nextScreen,
+      },
     });
-
-    return () => {
-      // Clear app state when leaving this screen normally
-      save('appState', null);
-    };
   }, []);
 
-  // Countdown timer
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
@@ -49,24 +54,20 @@ export default function OTPVerification() {
   }, [timer]);
 
   const handleCancelConfirm = () => {
-    Alert.alert(
-      'Cancel Process',
-      'Are you sure you want to cancel? You will need to start over.',
-      [
-        { text: 'No, Stay', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: () => {
-            save('appState', null);
-            navigateBack();
-          },
+    Alert.alert('Cancel Process', 'Are you sure you want to cancel? You will need to start over.', [
+      { text: 'No, Stay', style: 'cancel' },
+      {
+        text: 'Yes, Cancel',
+        style: 'destructive',
+        onPress: () => {
+          save('appState', null);
+          save('registrationState', null);
+          navigateBack();
         },
-      ]
-    );
+      },
+    ]);
   };
 
-  // Hardware back button
   useFocusEffect(
     useCallback(() => {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -85,17 +86,31 @@ export default function OTPVerification() {
 
   const handleOtpChange = (value, index) => {
     if (!/^\d*$/.test(value)) return;
+
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
+
+    // Move forward only if a digit was entered
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyPress = (e, index) => {
-    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+    if (e.nativeEvent.key === 'Backspace') {
+      if (otp[index]) {
+        // Clear current box but stay focused here
+        const newOtp = [...otp];
+        newOtp[index] = '';
+        setOtp(newOtp);
+      } else if (index > 0) {
+        // Current box already empty — go back and clear previous
+        const newOtp = [...otp];
+        newOtp[index - 1] = '';
+        setOtp(newOtp);
+        inputRefs.current[index - 1]?.focus();
+      }
     }
   };
 
@@ -106,21 +121,33 @@ export default function OTPVerification() {
       return;
     }
 
+    const accountNumber = params?.accountNumber || (await load('registrationState'))?.accountNumber;
+
+    if (!accountNumber) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Session expired, please start over' });
+      save('appState', null);
+      save('registrationState', null);
+      navigateBack();
+      return;
+    }
+
     setIsLoading(true);
 
-    // Fake API simulation for now
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    Toast.show({ type: 'success', text1: 'OTP Verified!', text2: 'Proceeding to next step...' });
+    const response = await validateOtp(null, { otp: otpValue, accountNumber });
+
+    if (response?.ok) {
+      Toast.show({ type: 'success', text1: 'OTP Verified!', text2: 'Proceeding to next step...' });
+      save('appState', null);
+      navigateTo(params?.nextScreen || 'landingScreen', { accountNumber });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Verification Failed',
+        text2: response?.message || 'Invalid OTP',
+      });
+    }
 
     setIsLoading(false);
-    // navigateTo(params?.nextScreen || 'setUser'); // uncomment when real API is ready
-  };
-
-  const handleResendCode = () => {
-    setTimer(234);
-    setOtp(['', '', '', '', '', '']);
-    inputRefs.current[0]?.focus();
-    Toast.show({ type: 'info', text1: 'OTP Resent', text2: `Code sent to ${params?.phoneNumber}` });
   };
 
   return (
@@ -160,6 +187,7 @@ export default function OTPVerification() {
               keyboardType="numeric"
               maxLength={1}
               editable={!isLoading}
+              caretHidden={true}
               className="mx-1 rounded-lg text-center text-2xl font-bold"
               style={{
                 width: 45,
@@ -171,17 +199,6 @@ export default function OTPVerification() {
               }}
             />
           ))}
-        </View>
-
-        <View className="mb-8 items-center">
-          <Text className="mb-1 text-sm text-gray-600">Didn&apos;t receive code?</Text>
-          <TouchableOpacity onPress={handleResendCode} disabled={timer > 0 || isLoading}>
-            <Text
-              className="text-sm font-semibold"
-              style={{ color: timer > 0 ? '#9CA3AF' : Colors?.primary }}>
-              Resend {formatTime(timer)}
-            </Text>
-          </TouchableOpacity>
         </View>
 
         <View className="mt-auto px-5 pb-6">

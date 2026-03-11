@@ -10,6 +10,7 @@ import TextInputComponent from 'components/textInputs';
 import { GlobalStatusBar } from 'config/statusBar';
 import { initiate } from 'api/auth';
 import Toast from 'react-native-toast-message';
+import { save } from 'config/storage';
 
 export default function RegistrationForm() {
   const [accountNumber, setAccountNumber] = useState('');
@@ -25,9 +26,24 @@ export default function RegistrationForm() {
 
     if (response?.ok) {
       const phoneNumber = response?.data?.data?.phoneNumber;
-      navigateTo('otp', { phoneNumber, nextScreen: 'registrationSteps' });
+
+      // Save to storage in case app closes mid-registration
+      await save('registrationState', {
+        accountNumber: cleanedAccountNumber,
+        phoneNumber,
+      });
+
+      navigateTo('otp', {
+        phoneNumber,
+        accountNumber: cleanedAccountNumber,
+        nextScreen: 'setUser',
+      });
     } else {
-      Toast.show({ type: 'error', text1: 'Failed', text2: response?.message || 'Something went wrong' });
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: response?.message || 'Something went wrong',
+      });
     }
 
     setIsLoading(false);
