@@ -1,4 +1,5 @@
 // utils/navigation.js
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { Alert } from 'react-native';
 
@@ -26,10 +27,27 @@ export function navigateBack(fallback = 'landingScreen') {
   }
 }
 
-export function navigateReplace(path) {
+export function navigateReplace(path, params = {}) {
   try {
-    router.replace(path);
+    if (params && Object.keys(params).length > 0) {
+      router.replace({ pathname: path, params });
+    } else {
+      router.replace(path);
+    }
   } catch (error) {
     Alert.alert('Navigation error', error?.message || 'Unable to navigate to the page');
   }
 }
+
+
+// async function logAllStorage() {
+//   const keys = await AsyncStorage.getAllKeys();
+//   const items = await AsyncStorage.multiGet(keys);
+//   console.log('=== ASYNC STORAGE ===');
+//   items.forEach(([key, value]) => {
+//     console.log(`${key}:`, JSON.parse(value));
+//   });
+//   console.log('=====================');
+// }
+
+// logAllStorage();

@@ -17,8 +17,8 @@ export default function SetUsernamePassword() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(true);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const params = useLocalSearchParams();
 
@@ -164,7 +164,7 @@ export default function SetUsernamePassword() {
             onChangeText={setPassword}
             placeholder="Enter password"
             showPasswordToggle={true}
-            secureTextEntry={!showPassword}
+            secureTextEntry={showPassword} // 👈 removed the !
             onToggleSecureTextEntry={() => setShowPassword(!showPassword)}
             isLoading={isLoading}
           />
@@ -175,7 +175,7 @@ export default function SetUsernamePassword() {
             onChangeText={setConfirmPassword}
             placeholder="Confirm password"
             showPasswordToggle={true}
-            secureTextEntry={!showConfirmPassword}
+            secureTextEntry={showConfirmPassword}
             onToggleSecureTextEntry={() => setShowConfirmPassword(!showConfirmPassword)}
             isLoading={isLoading}
             error={

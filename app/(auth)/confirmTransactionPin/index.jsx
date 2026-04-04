@@ -1,53 +1,39 @@
-// screens/SetTransactionPIN.jsx
+// screens/ConfirmTransactionPIN.jsx
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, Image, ScrollView, Alert, BackHandler } from 'react-native';
 import Header from 'components/header';
-import { navigateBack, navigateTo } from 'app/navigate';
+import { navigateBack, navigateReplace, navigateTo } from 'app/navigate';
 import TouchBtn from 'components/touchBtn';
 import { Colors } from 'config/theme';
 import { GlobalStatusBar } from 'config/statusBar';
 import { useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
 import { save } from 'config/storage';
+import { setupTransactionPin } from 'api/auth';
+import Toast from 'react-native-toast-message';
 
-export default function SetTransactionPIN() {
+export default function ConfirmTransactionPIN() {
   const [pin, setPin] = useState(['', '', '', '']);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef([]);
   const params = useLocalSearchParams();
 
-  // Save app state so it can resume here if closed
   useEffect(() => {
     save('appState', {
-      stage: 'setTransactionPin',
+      stage: 'confirmTransactionPin',
       params: {
         accountNumber: params?.accountNumber,
         username: params?.username,
+        pin: params?.pin,
       },
     });
   }, []);
 
-  const handleCancelConfirm = () => {
-    Alert.alert(
-      'Leave this page?',
-      'Are you sure you want to go back? You will need to start this step over.',
-      [
-        { text: 'No, Stay', style: 'cancel' },
-        {
-          text: 'Yes, Leave',
-          style: 'destructive',
-          onPress: () => {
-            save('appState', null);
-            navigateBack();
-          },
-        },
-      ]
-    );
-  };
-
+  // update useFocusEffect
   useFocusEffect(
     useCallback(() => {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        handleCancelConfirm();
+        handleBack();
         return true;
       });
       return () => backHandler.remove();
@@ -79,12 +65,56 @@ export default function SetTransactionPIN() {
     }
   };
 
-  const handleContinue = () => {
-    navigateTo('confirmTransactionPin', {
-      pin: pin.join(''),
-      accountNumber: params?.accountNumber,
-      username: params?.username,
+  const handleContinue = async () => {
+    const confirmedPin = pin.join('');
+
+    if (confirmedPin !== params?.pin) {
+      Toast.show({
+        type: 'error',
+        text1: 'PIN Mismatch',
+        text2: 'PINs do not match, please try again',
+      });
+      setPin(['', '', '', '']);
+      inputRefs.current[0]?.focus();
+      return;
+    }
+
+    setIsLoading(true);
+
+    const response = await setupTransactionPin(params?.username, { pin: confirmedPin });
+
+    console.log(JSON.stringify(response, null, 2));
+
+    if (response?.ok) {
+      Toast.show({ type: 'success', text1: 'PIN Set!', text2: 'Transaction PIN set successfully' });
+      save('appState', null);
+      navigateReplace('successScreen', {
+        message: 'Your account is now secured and ready for use',
+        nextScreen: 'landingScreen',
+        backScreen: 'landingScreen',
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: response?.message || 'Something went wrong',
+      });
+      setPin(['', '', '', '']);
+      inputRefs.current[0]?.focus();
+    }
+
+    setIsLoading(false);
+  };
+
+  const handleBack = () => {
+    save('appState', {
+      stage: 'setTransactionPin',
+      params: {
+        accountNumber: params?.accountNumber,
+        username: params?.username,
+      },
     });
+    navigateBack();
   };
 
   return (
@@ -94,11 +124,7 @@ export default function SetTransactionPIN() {
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        <Header
-          title="Set Transaction PIN"
-          onLeftPress={handleCancelConfirm}
-          showLeftIcon={true}
-        />
+        <Header title="Confirm Transaction PIN" onLeftPress={handleBack} showLeftIcon={true} />
 
         <View className="mb-6 items-center px-5">
           <Image
@@ -110,7 +136,7 @@ export default function SetTransactionPIN() {
 
         <View className="mb-8 px-5">
           <Text className="text-center text-sm leading-5 text-gray-600">
-            Add an extra layer of protection for your money
+            Re-enter your PIN to confirm
           </Text>
         </View>
 
@@ -126,6 +152,7 @@ export default function SetTransactionPIN() {
               maxLength={1}
               caretHidden={true}
               secureTextEntry={true}
+              editable={!isLoading}
               className="mx-2 rounded-lg text-center text-2xl font-bold"
               style={{
                 width: 60,
@@ -142,8 +169,10 @@ export default function SetTransactionPIN() {
         <View className="mt-auto px-5 pb-6 pt-4">
           <TouchBtn
             onPress={handleContinue}
-            label="Continue"
+            isLoading={isLoading}
+            loadingText="Please wait..."
             disabled={pin.join('').length !== 4}
+            label="Continue"
             textClassName="text-base font-semibold"
             buttonClassName="items-center rounded-lg py-4"
             activeOpacity={0.8}

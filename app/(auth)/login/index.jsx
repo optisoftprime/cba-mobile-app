@@ -1,46 +1,41 @@
-// screens/LoginScreen.jsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { navigateTo } from 'app/navigate';
 import { Colors } from 'config/theme';
-import TextInputComponent from './../../../components/textInputs';
 import { login } from 'api/auth';
 import Toast from 'react-native-toast-message';
-import { save } from 'config/storage';
+import { save, saveSecure } from 'config/storage';
 
 export default function LoginScreen() {
-  const [accountNumber, setAccountNumber] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const isFormReady = accountNumber.replace(/\s/g, '').length === 10 && password.length > 0;
+  const isFormReady = username.trim().length > 0 && password.trim().length > 0;
 
   const handleLogin = async () => {
     setIsLoading(true);
 
     const response = await login(null, {
-      username: accountNumber.replace(/\s/g, '').trim(),
-      password,
+      username: username.trim(),
+      password: password.trim(),
     });
 
-    
     console.log(JSON.stringify(response, null, 2));
 
     if (response?.ok) {
-      const accessToken = response?.data?.data?.accessToken || response?.data?.accessToken;
+      const accessToken = response?.data?.data?.token;
 
-      // Save token to storage
-      await save('auth', { accessToken });
+      await saveSecure('auth', { accessToken });
 
-      // Save account if remember me
       if (rememberMe) {
-        await save('user', { accountNumber: accountNumber.replace(/\s/g, '').trim() });
+        await save('user', { username: response?.data?.data?.username });
       }
 
-      Toast.show({ type: 'success', text1: 'Welcome back!', text2: 'Login successful' });
+      // Toast.show({ type: 'success', text1: 'Welcome back!', text2: 'Login successful' });
       navigateTo('appLayout');
     } else {
       Toast.show({
@@ -62,29 +57,25 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 80 }}
           showsVerticalScrollIndicator={false}>
-          {/* Header */}
           <View className="mb-14 items-center">
             <Text className="mb-2 text-3xl font-bold text-white">Login</Text>
             <Text className="text-sm text-white/80">Kindly login into your account</Text>
           </View>
 
-          {/* Form */}
           <View className="w-full">
-            {/* Account Number */}
             <View className="mb-6">
-              <Text className="mb-2 text-sm font-medium text-white">Account Number</Text>
+              <Text className="mb-2 text-sm font-medium text-white">Username</Text>
               <TextInput
                 className="rounded-lg border border-white/30 bg-white/10 px-4 py-4 text-base text-white"
-                value={accountNumber}
-                onChangeText={setAccountNumber}
-                keyboardType="numeric"
-                maxLength={10}
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
                 editable={!isLoading}
+                placeholder="Enter username"
                 placeholderTextColor="rgba(255, 255, 255, 0.5)"
               />
             </View>
 
-            {/* Password */}
             <View className="mb-6">
               <Text className="mb-2 text-sm font-medium text-white">Password</Text>
               <View className="flex-row items-center rounded-lg border border-white/30 bg-white/10">
@@ -94,6 +85,7 @@ export default function LoginScreen() {
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   editable={!isLoading}
+                  placeholder="Enter password"
                   placeholderTextColor="rgba(255, 255, 255, 0.5)"
                 />
                 <TouchableOpacity
@@ -109,7 +101,6 @@ export default function LoginScreen() {
               </View>
             </View>
 
-            {/* Remember Me & Forgot Password */}
             <View className="mb-10 flex-row items-center justify-between">
               <TouchableOpacity
                 className="flex-row items-center"
@@ -126,7 +117,6 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Login Button */}
             <TouchableOpacity
               className="mt-5 items-center rounded-lg py-4"
               style={{ backgroundColor: isFormReady && !isLoading ? 'white' : '#9CA3AF' }}
@@ -134,11 +124,9 @@ export default function LoginScreen() {
               disabled={!isFormReady || isLoading}
               activeOpacity={0.8}>
               {isLoading ? (
-                <View className="flex-row items-center">
-                  <Text className="text-base font-semibold" style={{ color: Colors?.primary }}>
-                    Please wait...
-                  </Text>
-                </View>
+                <Text className="text-base font-semibold" style={{ color: Colors?.primary }}>
+                  Please wait...
+                </Text>
               ) : (
                 <Text
                   className="text-base font-semibold"

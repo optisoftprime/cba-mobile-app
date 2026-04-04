@@ -1,47 +1,40 @@
 // screens/SecurityQuestions.jsx
-import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, ScrollView, Text, TextInput } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Alert, BackHandler } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
-import Dropdown from 'components/dropDown';
 import TouchBtn from 'components/touchBtn';
-import { getSecurityQuestions } from 'api/auth';
+import { setSecurityQuestions } from 'api/auth';
 import { useLocalSearchParams } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { save } from 'config/storage';
 import { GlobalStatusBar } from 'config/statusBar';
 import { Colors } from 'config/theme';
-
-const securityQuestions = [
-  { label: 'What is your favourite food?', value: 'favourite_food' },
-  { label: 'What is your first car?', value: 'first_car' },
-  { label: 'What is your dream vacation city?', value: 'dream_city' },
-  { label: 'What was the name of your first school?', value: 'first_school' },
-  { label: "What is your mother's maiden name?", value: 'mother_maiden_name' },
-  { label: "What is your pet's name?", value: 'pet_name' },
-  { label: 'What city were you born in?', value: 'birth_city' },
-  { label: 'What is your favorite book?', value: 'favorite_book' },
-];
+import Toast from 'react-native-toast-message';
+import TextInputComponent from 'components/textInputs';
 
 export default function SecurityQuestions() {
   const [question1, setQuestion1] = useState('');
   const [answer1, setAnswer1] = useState('');
-  const [showDropdown1, setShowDropdown1] = useState(false);
-  // also remeber to add the alert are you sure you want to quit youll have to start all over like the over  screens
-  // alo to clear the asyn for this saved scren at the right place
 
   const [question2, setQuestion2] = useState('');
   const [answer2, setAnswer2] = useState('');
-  const [showDropdown2, setShowDropdown2] = useState(false);
 
   const [question3, setQuestion3] = useState('');
   const [answer3, setAnswer3] = useState('');
-  const [showDropdown3, setShowDropdown3] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const params = useLocalSearchParams();
 
-  const handleContinue = () => {
-    navigateTo('setTransactionPin');
-  };
+  const isFormReady =
+    question1.trim() &&
+    answer1.trim() &&
+    question2.trim() &&
+    answer2.trim() &&
+    question3.trim() &&
+    answer3.trim();
 
   useEffect(() => {
     save('appState', {
@@ -53,112 +46,149 @@ export default function SecurityQuestions() {
     });
   }, []);
 
-  //   setInterval(()=>{
-  // console.log(params)
-  // {"accountNumber": "4179345591", "username": "isrealgab3"}
-  //   },2500)
+  const handleCancelConfirm = () => {
+    Alert.alert(
+      'Leave this page?',
+      'Are you sure you want to go back? You will need to start this step over.',
+      [
+        { text: 'No, Stay', style: 'cancel' },
+        {
+          text: 'Yes, Leave',
+          style: 'destructive',
+          onPress: () => {
+            save('appState', null);
+            navigateBack();
+          },
+        },
+      ]
+    );
+  };
 
-  async function fetchQuestions() {
-    const response = await getSecurityQuestions({ username: params?.username });
-    console.log('Security Questions Response:', JSON.stringify(response, null, 2));
-  }
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleCancelConfirm();
+        return true;
+      });
+      return () => backHandler.remove();
+    }, [])
+  );
 
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
+  const handleContinue = async () => {
+    const selected = [question1.trim(), question2.trim(), question3.trim()];
+    if (new Set(selected).size !== 3) {
+      Toast.show({
+        type: 'error',
+        text1: 'Duplicate Questions',
+        text2: 'Please enter 3 different questions',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    const response = await setSecurityQuestions(params?.username, {
+      questions: [
+        { question: question1.trim(), answer: answer1.trim() },
+        { question: question2.trim(), answer: answer2.trim() },
+        { question: question3.trim(), answer: answer3.trim() },
+      ],
+    });
+
+    console.log(JSON.stringify(response, null, 2));
+
+    if (response?.ok) {
+      Toast.show({
+        type: 'success',
+        text1: 'Saved!',
+        text2: 'Security questions set successfully',
+      });
+      save('appState', null);
+      navigateTo('setTransactionPin', {
+        accountNumber: params?.accountNumber,
+        username: params?.username,
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: response?.message || 'Something went wrong',
+      });
+    }
+
+    setIsLoading(false);
+  };
 
   return (
-    <View className="flex-1 bg-white"  style={{ backgroundColor: Colors?.background }}>
+    <View className="flex-1" style={{ backgroundColor: Colors?.background }}>
       <GlobalStatusBar style="dark-content" />
-
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        extraScrollHeight={150}
+        extraHeight={150}>
         <Header
           title="Secure your Access"
-          onLeftPress={navigateBack}
+          onLeftPress={handleCancelConfirm}
           showLeftIcon={true}
           subtitle="Set your security questions to protect your profile"
         />
 
         <View className="flex-1 px-5 pt-2">
-          <Dropdown
+          <TextInputComponent
             label="Security Question 1"
-            placeholder="Security Question 1"
             value={question1}
-            options={securityQuestions}
-            onSelect={(value) => {
-              setQuestion1(value);
-              setShowDropdown1(false);
-            }}
-            isOpen={showDropdown1}
-            onToggle={() => setShowDropdown1(!showDropdown1)}
+            onChangeText={setQuestion1}
+            placeholder="Enter your security question"
+            isLoading={isLoading}
+          />
+          <TextInputComponent
+            label="Answer 1"
+            value={answer1}
+            onChangeText={setAnswer1}
+            placeholder="Enter your answer"
+            isLoading={isLoading}
           />
 
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Answer</Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={answer1}
-              onChangeText={setAnswer1}
-              placeholder="Answers"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          <Dropdown
+          <TextInputComponent
             label="Security Question 2"
-            placeholder="Security Question 2"
             value={question2}
-            options={securityQuestions}
-            onSelect={(value) => {
-              setQuestion2(value);
-              setShowDropdown2(false);
-            }}
-            isOpen={showDropdown2}
-            onToggle={() => setShowDropdown2(!showDropdown2)}
+            onChangeText={setQuestion2}
+            placeholder="Enter your security question"
+            isLoading={isLoading}
+          />
+          <TextInputComponent
+            label="Answer 2"
+            value={answer2}
+            onChangeText={setAnswer2}
+            placeholder="Enter your answer"
+            isLoading={isLoading}
           />
 
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Answer</Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={answer2}
-              onChangeText={setAnswer2}
-              placeholder="Answers"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          <Dropdown
+          <TextInputComponent
             label="Security Question 3"
-            placeholder="Security Question 3"
             value={question3}
-            options={securityQuestions}
-            onSelect={(value) => {
-              setQuestion3(value);
-              setShowDropdown3(false);
-            }}
-            isOpen={showDropdown3}
-            onToggle={() => setShowDropdown3(!showDropdown3)}
+            onChangeText={setQuestion3}
+            placeholder="Enter your security question"
+            isLoading={isLoading}
           />
-
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Answer</Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={answer3}
-              onChangeText={setAnswer3}
-              placeholder="Answers"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
+          <TextInputComponent
+            label="Answer 3"
+            value={answer3}
+            onChangeText={setAnswer3}
+            placeholder="Enter your answer"
+            isLoading={isLoading}
+          />
         </View>
 
         <View className="px-5 pb-6 pt-4">
           <TouchBtn
             onPress={handleContinue}
+            isLoading={isLoading}
+            loadingText="Please wait..."
+            disabled={!isFormReady}
             label="Continue"
             textClassName="text-base font-semibold"
             buttonClassName="items-center rounded-lg py-4"
@@ -166,7 +196,7 @@ export default function SecurityQuestions() {
             containerClassName=""
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

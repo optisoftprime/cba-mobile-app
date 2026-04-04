@@ -63,7 +63,7 @@ const TextInputComponent = ({
     }
   };
 
-  const getPasswordIconName = () => (secureTextEntry ? 'eye' : 'eye-off');
+  const getPasswordIconName = () => (secureTextEntry ? 'eye-off' : 'eye');
   const getIconName = () => (showPasswordToggle ? getPasswordIconName() : iconName);
   const hasIcon = iconName || showPasswordToggle;
 

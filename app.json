@@ -3,31 +3,27 @@
     "name": "RizeSpring",
     "slug": "rizespring",
     "version": "1.0.0",
-
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "experiments": {
       "tsconfigPaths": true
     },
-
-    "plugins": ["expo-router"],
-
+    "plugins": [
+      "expo-router",
+      "@react-native-community/datetimepicker"
+    ],
     "orientation": "portrait",
-
     "icon": "./assets/cropedAppLogo.png",
-
     "userInterfaceStyle": "light",
-
     "splash": {
       "image": "./assets/cropedAppLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-
-    "assetBundlePatterns": ["**/*"],
-
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -35,29 +31,24 @@
         "UIStatusBarHidden": false
       }
     },
-
     "android": {
       "package": "com.optisoft.rizespring",
-
       "adaptiveIcon": {
         "foregroundImage": "./assets/cropedAppLogo.png",
         "backgroundColor": "#ffffff"
       },
-
       "statusBar": {
         "hidden": false,
         "backgroundColor": "#ffffff",
         "translucent": false,
         "barStyle": "dark-content"
       },
-
       "navigationBar": {
         "visible": "sticky-immersive",
         "backgroundColor": "#ffffff",
         "barStyle": "dark-content"
       }
     },
-
     "extra": {
       "router": {},
       "eas": {

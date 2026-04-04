@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import WalletBalanceCard from 'components/walletCard';
 import { navigateTo } from 'app/navigate';
+import Toast from 'react-native-toast-message';
+import { trimMessage } from 'helper';
+import { getDashBoardData } from 'api/home';
 
 export default function HomePage() {
   const services = [
@@ -44,7 +47,7 @@ export default function HomePage() {
       points: '3,450 points',
       color: '#A16207',
       bgColor: '#CA8A04',
-      link:"referal"
+      link: 'referal',
     },
     {
       title: 'Cashback',
@@ -54,6 +57,21 @@ export default function HomePage() {
       bgColor: '#DC2626',
     },
   ];
+
+  async function getHomeData() {
+    try {
+      console.log('running to get home data');
+
+      const response = await getDashBoardData();
+      console.log(JSON.stringify(response, null, 2));
+    } catch (error) {
+      Toast.show({ type: 'error', text1: 'An Error Occured', text2: trimMessage(error?.message) });
+    }
+  }
+
+  // useEffect(() => {
+  //   getHomeData();
+  // }, []);
 
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -119,7 +137,9 @@ export default function HomePage() {
           {goodies.map((goodie, index) => (
             <TouchableOpacity
               key={index}
-              onPress={(()=>{navigateTo(goodie?.link)})}
+              onPress={() => {
+                navigateTo(goodie?.link);
+              }}
               className="mr-2 flex-1 rounded-xl p-4"
               style={{ backgroundColor: goodie.bgColor }}>
               <Ionicons name={index === 0 ? 'gift' : 'cash'} size={24} color="white" />

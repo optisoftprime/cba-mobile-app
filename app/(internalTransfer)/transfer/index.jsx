@@ -1,38 +1,127 @@
 // screens/WalletToWalletTransfer.jsx
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 import Header from 'components/header';
-import { navigateBack, navigateTo } from 'app/navigate';
+import { navigateBack } from 'app/navigate';
 import TouchBtn from 'components/touchBtn';
+import TextInputComponent from 'components/textInputs';
+import EnterPINModal from 'components/EnterPINModal';
+import { validateAccountNumber, makeInternalTransfer } from 'api/transfer';
+import { Colors } from 'config/theme';
+
+const formatWithCommas = (value) => {
+  const digits = value.replace(/[^0-9.]/g, '');
+  const parts = digits.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0];
+};
+
+const stripCommas = (value) => value.replace(/,/g, '');
 
 export default function WalletToWalletTransfer() {
   const [walletNumber, setWalletNumber] = useState('');
-  const [recipientName, setRecipientName] = useState('');
+  const [validatedAccount, setValidatedAccount] = useState(null);
+  const [validating, setValidating] = useState(false);
+  const [validationError, setValidationError] = useState('');
+
   const [amount, setAmount] = useState('');
   const [narration, setNarration] = useState('');
-  const [isValidRecipient, setIsValidRecipient] = useState(false);
+
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const debounceRef = useRef(null);
 
   const handleWalletNumberChange = (text) => {
-    setWalletNumber(text);
+    const digits = text.replace(/[^0-9]/g, '');
+    setWalletNumber(digits);
+    setValidatedAccount(null);
+    setValidationError('');
 
-    // Simulate wallet number validation
-    if (text.length >= 10) {
-      setRecipientName('Abraham Mclawdon David');
-      setIsValidRecipient(true);
-    } else {
-      setRecipientName('');
-      setIsValidRecipient(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (digits.length === 10) {
+      debounceRef.current = setTimeout(async () => {
+        setValidating(true);
+        try {
+          const response = await validateAccountNumber({ accountNumber: digits });
+          if (response?.ok && response?.data?.data) {
+            setValidatedAccount(response.data.data);
+          } else {
+            setValidationError(response?.message ?? 'Account not found');
+          }
+        } catch (error) {
+          setValidationError(error?.message ?? 'Validation failed');
+        } finally {
+          setValidating(false);
+        }
+      }, 500);
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   const handleContinue = () => {
-    // console.log('Transfer details:', {
-    //   walletNumber,
-    //   recipientName,
-    //   amount,
-    //   narration,
-    // });
-    navigateTo('setInternalTransferPin');
+    if (!validatedAccount) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Recipient',
+        text2: 'Please enter a valid wallet number.',
+      });
+      return;
+    }
+    if (!amount) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Amount',
+        text2: 'Please enter an amount to transfer.',
+      });
+      return;
+    }
+    setPinModalVisible(true);
+  };
+
+  const handlePinConfirm = async (pin) => {
+    setSubmitting(true);
+    try {
+      const response = await makeInternalTransfer(
+        {},
+        {
+          destinationAccountNumber: walletNumber,
+          amount: parseFloat(stripCommas(amount)),
+          description: narration,
+          transactionPin: pin,
+        }
+      );
+      if (response?.ok) {
+        setPinModalVisible(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Transfer Successful',
+          text2: response?.data?.message ?? 'Your transfer was completed.',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Transfer Failed',
+          text2: response?.message,
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'An error occurred',
+        text2: error?.message,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -49,62 +138,76 @@ export default function WalletToWalletTransfer() {
         />
 
         <View className="flex-1 px-4 pt-6">
-          {/* Recipient Wallet Number */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">
-              Recipient Wallet Number
-            </Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={walletNumber}
-              onChangeText={handleWalletNumberChange}
-              placeholder="Enter recipient wallet number"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="number-pad"
-            />
-          </View>
+          <TextInputComponent
+            label="Recipient Wallet Number"
+            value={walletNumber}
+            onChangeText={handleWalletNumberChange}
+            placeholder="Enter 10-digit wallet number"
+            keyboardType="number-pad"
+            maxLength={10}
+            isLoading={validating}
+            containerStyle={{ marginBottom: 8 }}
+          />
 
-          {/* Recipient Name Display */}
-          {isValidRecipient && (
-            <View className="mb-4 flex-row items-center">
-              <Text className="text-sm font-medium text-green-600">{recipientName}</Text>
-              <View className="ml-2 h-5 w-5 items-center justify-center rounded-full bg-green-600">
-                <Text className="text-xs font-bold text-white">✓</Text>
+          {/* Validated account card */}
+          {validatedAccount && (
+            <View
+              className="mb-5 flex-row items-center rounded-xl px-4 py-3"
+              style={{ backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#BBF7D0' }}>
+              <View
+                className="mr-3 h-9 w-9 items-center justify-center rounded-full"
+                style={{ backgroundColor: '#DCFCE7' }}>
+                <Ionicons name="checkmark" size={18} color="#16A34A" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs text-green-600">Account verified</Text>
+                <Text className="text-sm font-bold text-green-800">
+                  {validatedAccount.accountName}
+                </Text>
+                <Text className="text-xs text-green-600">{validatedAccount.accountNumber}</Text>
               </View>
             </View>
           )}
 
-          {/* Amount */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Amount</Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="₦0.00"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="decimal-pad"
-            />
-          </View>
+          {/* Validation error card */}
+          {validationError ? (
+            <View
+              className="mb-5 flex-row items-center rounded-xl px-4 py-3"
+              style={{ backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA' }}>
+              <View
+                className="mr-3 h-9 w-9 items-center justify-center rounded-full"
+                style={{ backgroundColor: '#FEE2E2' }}>
+                <Ionicons name="close" size={18} color="#DC2626" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs text-red-500">Verification failed</Text>
+                <Text className="text-sm font-semibold text-red-700">{validationError}</Text>
+              </View>
+            </View>
+          ) : null}
 
-          {/* Narration */}
-          <View className="mb-6">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Narration</Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={narration}
-              onChangeText={setNarration}
-              placeholder="Enter narration"
-              placeholderTextColor="#9CA3AF"
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              style={{ minHeight: 100 }}
-            />
-          </View>
+          <TextInputComponent
+            label="Amount"
+            value={amount}
+            onChangeText={(text) => setAmount(formatWithCommas(text))}
+            placeholder="₦0.00"
+            keyboardType="decimal-pad"
+            containerStyle={{ marginBottom: 16 }}
+          />
+
+          <TextInputComponent
+            label="Narration"
+            value={narration}
+            onChangeText={setNarration}
+            placeholder="Enter narration"
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            inputStyle={{ minHeight: 100 }}
+            containerStyle={{ marginBottom: 24 }}
+          />
         </View>
 
-        {/* Continue Button - Fixed at Bottom */}
         <View className="px-4 pb-6">
           <TouchBtn
             onPress={handleContinue}
@@ -116,6 +219,15 @@ export default function WalletToWalletTransfer() {
           />
         </View>
       </ScrollView>
+
+      <EnterPINModal
+        visible={pinModalVisible}
+        onClose={() => setPinModalVisible(false)}
+        onConfirm={handlePinConfirm}
+        isLoading={submitting}
+        title="Enter PIN"
+        subtitle="Enter your 4-digit transaction PIN"
+      />
     </View>
   );
 }
