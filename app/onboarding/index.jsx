@@ -18,7 +18,7 @@ export default function OnboardingWelcome() {
     if (currentIndex < pageData.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      navigateTo('/landingScreen');
+      navigateTo('landingScreen');
     }
   };
 
@@ -83,9 +83,8 @@ export default function OnboardingWelcome() {
           <View className="flex-row items-center justify-end px-4">
             {/* Pagination Dots (Centered) */}
             <View
-              className={`absolute left-0 right-0 flex-row justify-center ${
-                currentIndex === pageData.length - 1 ? 'mr-20' : 'mr-15'
-              }`}>
+              className={`absolute left-0 right-0 flex-row justify-center ${currentIndex === pageData.length - 1 ? 'mr-20' : 'mr-15'
+                }`}>
               {pageData.map((_, index) => (
                 <Animated.View
                   key={index}

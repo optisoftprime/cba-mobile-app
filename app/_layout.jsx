@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { save, load } from '../config/storage';
 import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,9 @@ export default function Layout() {
       }
 
       const appState = await load('appState');
+      console.log(appState)
+      // await AsyncStorage.clear()
+
 
       if (appState?.stage) {
         router.replace({

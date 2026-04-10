@@ -5,6 +5,7 @@ import { Alert } from 'react-native';
 
 export function navigateTo(path, params = {}) {
   try {
+    console.log("navigating to ", path)
     if (params && Object.keys(params).length > 0) {
       router.push({ pathname: path, params });
     } else {
@@ -29,6 +30,7 @@ export function navigateBack(fallback = 'landingScreen') {
 
 export function navigateReplace(path, params = {}) {
   try {
+    console.log("navigating to ", path)
     if (params && Object.keys(params).length > 0) {
       router.replace({ pathname: path, params });
     } else {

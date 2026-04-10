@@ -22,9 +22,9 @@ export async function bookLoan(payload) {
   }
 }
 
-export async function getMyLoans() {
+export async function getMyLoans(params) {
   try {
-    const response = await axiosCbaInstance.get(routes?.myLoans);
+    const response = await axiosCbaInstance.get(routes?.myLoans, { params });
     return { ok: true, data: response.data };
   } catch (error) {
     console.log(JSON.stringify(error, null, 2));

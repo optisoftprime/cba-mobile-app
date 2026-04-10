@@ -4,8 +4,9 @@ import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import Header from 'components/header';
-import { navigateTo } from 'app/navigate';
+import { navigateReplace, navigateTo } from 'app/navigate';
 import TouchBtn from 'components/touchBtn';
 import { Colors } from 'config/theme';
 import { GlobalStatusBar } from 'config/statusBar';
@@ -13,13 +14,52 @@ import Toast from 'react-native-toast-message';
 import { trimMessage } from 'helper';
 import { accountSetup } from 'api/auth';
 
+/**
+ * Last-resort fallback: copy non-file:// URIs to cache then read.
+ * Only used for DocumentPicker (which already sets copyToCacheDirectory:true
+ * so this path is almost never hit).
+ */
+const uriToBase64Fallback = async (uri) => {
+  console.log('[uriToBase64Fallback] uri:', uri);
+  let localUri = uri;
+
+  if (!uri.startsWith('file://')) {
+    const ext = (uri.match(/\.([a-z0-9]{2,5})(\?|$)/i) || [])[1] || 'jpg';
+    const dest = `${FileSystem.cacheDirectory}id_doc_${Date.now()}.${ext}`;
+    await FileSystem.copyAsync({ from: uri, to: dest });
+    localUri = dest;
+  }
+
+  const info = await FileSystem.getInfoAsync(localUri);
+  if (!info.exists) throw new Error('File missing after copy: ' + localUri);
+
+  return FileSystem.readAsStringAsync(localUri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+};
+
+const resolveMimeType = (asset) => {
+  if (asset?.mimeType && asset.mimeType !== 'application/octet-stream') return asset.mimeType;
+  const uri = asset?.uri ?? '';
+  if (/\.png(\?|$)/i.test(uri)) return 'image/png';
+  if (/\.pdf(\?|$)/i.test(uri)) return 'application/pdf';
+  return 'image/jpeg';
+};
+
+const showFileError = (ctx, err) => {
+  console.error(`[FileError][${ctx}]`, err?.message ?? err);
+  Toast.show({
+    type: 'error',
+    text1: 'File Error',
+    text2: 'Could not read the file. Please try again.',
+  });
+};
+
 export default function IdentityVerification() {
   const params = useLocalSearchParams();
   const [selectedIdType, setSelectedIdType] = useState('');
-  const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState(null); // { uri, base64, mimeType }
   const [isLoading, setIsLoading] = useState(false);
-
-  console.log('Stage Two params:', params);
 
   const idTypes = [
     { id: 'National_Identification', label: 'National ID' },
@@ -38,44 +78,78 @@ export default function IdentityVerification() {
     ]);
   };
 
+  // ─── Camera ────────────────────────────────────────────────────────────────
   const handleCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission required', 'Camera access is needed to take a photo of your ID.');
       return;
     }
+
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.8,
+      base64: true, // ✅ Expo returns base64 directly — no FileSystem read needed
     });
-    if (!result.canceled) setUploadedFile(result.assets[0].uri);
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      if (!asset.base64) {
+        showFileError('camera', new Error('base64 not returned by Expo'));
+        return;
+      }
+      setUploadedFile({ uri: asset.uri, base64: asset.base64, mimeType: resolveMimeType(asset) });
+    }
   };
 
+  // ─── Gallery ───────────────────────────────────────────────────────────────
   const handleGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission required', 'Gallery access is needed to select your ID.');
       return;
     }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.8,
+      base64: true, // ✅ Expo returns base64 directly — no FileSystem read needed
     });
-    if (!result.canceled) setUploadedFile(result.assets[0].uri);
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      if (!asset.base64) {
+        showFileError('gallery', new Error('base64 not returned by Expo'));
+        return;
+      }
+      setUploadedFile({ uri: asset.uri, base64: asset.base64, mimeType: resolveMimeType(asset) });
+    }
   };
 
+  // ─── Document (PDF) ────────────────────────────────────────────────────────
   const handleDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/pdf', 'image/*'],
-      copyToCacheDirectory: true,
+      copyToCacheDirectory: true, // gives us a file:// URI we can read
     });
-    if (!result.canceled) setUploadedFile(result.assets[0].uri);
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      try {
+        const base64 = await uriToBase64Fallback(asset.uri);
+        setUploadedFile({ uri: asset.uri, base64, mimeType: resolveMimeType(asset) });
+      } catch (error) {
+        showFileError('document', error);
+      }
+    }
   };
 
+  // ─── Submit ────────────────────────────────────────────────────────────────
   const handleContinue = async () => {
     setIsLoading(true);
+    console.log(uploadedFile?.base64.slice(0, 100));
 
     const payload = {
       firstName: params?.firstName,
@@ -85,24 +159,26 @@ export default function IdentityVerification() {
       email: params?.email,
       gender: params?.gender,
       documentType: selectedIdType,
-      documentUrl: uploadedFile || '',
+      documentUrl: uploadedFile?.base64 ?? '',
       password: params?.password,
       userName: params?.userName,
     };
 
-    console.log('accountSetup payload:', JSON.stringify(payload, null, 2));
+    // console.log('accountSetup payload (base64 truncated):', {
+    //   ...payload,
+    //   documentUrl: payload.documentUrl ? payload.documentUrl.slice(0, 60) + '...' : '',
+    // });
 
     const response = await accountSetup(payload);
-
     console.log(JSON.stringify(response, null, 2));
 
     setIsLoading(false);
 
     if (response?.ok) {
-      navigateTo('stageThree', {
+      navigateReplace('stageThree', {
         ...params,
         documentType: selectedIdType,
-        documentUrl: uploadedFile,
+        documentUrl: uploadedFile?.uri,
       });
     } else {
       Toast.show({
@@ -127,10 +203,10 @@ export default function IdentityVerification() {
           <View className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
             <View
               className="h-full rounded-full"
-              style={{ width: '33.33%', backgroundColor: Colors?.primary }}
+              style={{ width: '50%', backgroundColor: Colors?.primary }}
             />
           </View>
-          <Text className="mt-2 text-center text-xs text-gray-600">Step 2 of 6</Text>
+          <Text className="mt-2 text-center text-xs text-gray-600">Step 2 of 4</Text>
         </View>
 
         <Header
@@ -173,7 +249,9 @@ export default function IdentityVerification() {
                 }}>
                 <View
                   className="mr-3 h-5 w-5 items-center justify-center rounded-full border-2"
-                  style={{ borderColor: selectedIdType === type.id ? Colors?.primary : '#9CA3AF' }}>
+                  style={{
+                    borderColor: selectedIdType === type.id ? Colors?.primary : '#9CA3AF',
+                  }}>
                   {selectedIdType === type.id && (
                     <View
                       className="h-3 w-3 rounded-full"

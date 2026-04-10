@@ -1,13 +1,270 @@
-import React, { useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  BackHandler,
+  Alert,
+  RefreshControl,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import WalletBalanceCard from 'components/walletCard';
 import { navigateTo } from 'app/navigate';
 import Toast from 'react-native-toast-message';
 import { trimMessage } from 'helper';
 import { getDashBoardData } from 'api/home';
+import { save } from 'config/storage';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatAmount(amount) {
+  return `₦${Number(amount).toLocaleString('en-NG', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function formatTime(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('en-NG', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+function groupTransactionsByDate(transactions) {
+  const groups = {};
+  for (const tx of transactions) {
+    const date = new Date(tx.transactionDate);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    let label;
+    if (date.toDateString() === today.toDateString()) {
+      label = 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      label = 'Yesterday';
+    } else {
+      label = date.toLocaleDateString('en-NG', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(tx);
+  }
+  return groups;
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function Skeleton({ width, height, radius = 6, style }) {
+  return (
+    <View
+      style={[
+        {
+          width,
+          height,
+          borderRadius: radius,
+          backgroundColor: '#E5E7EB',
+        },
+        style,
+      ]}
+    />
+  );
+}
+
+function TransactionSkeleton() {
+  return (
+    <View style={{ borderRadius: 12, backgroundColor: 'white', overflow: 'hidden' }}>
+      {[1, 2, 3].map((i) => (
+        <View
+          key={i}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderBottomWidth: i < 3 ? 1 : 0,
+            borderBottomColor: '#F3F4F6',
+          }}>
+          <Skeleton width={48} height={48} radius={24} />
+          <View style={{ marginLeft: 12, flex: 1, gap: 6 }}>
+            <Skeleton width="60%" height={13} />
+            <Skeleton width="40%" height={11} style={{ marginTop: 4 }} />
+          </View>
+          <View style={{ alignItems: 'flex-end', gap: 6 }}>
+            <Skeleton width={72} height={13} />
+            <Skeleton width={52} height={11} style={{ marginTop: 4 }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ─── Transaction Item ─────────────────────────────────────────────────────────
+
+function TransactionItem({ tx }) {
+  const isSuccessful =
+    tx.status?.toLowerCase() === 'successful' || tx.status?.toLowerCase() === 'success';
+
+  const initials = tx.customerName
+    ? tx.customerName
+      .split(' ')
+      .slice(0, 2)
+      .map((n) => n.charAt(0).toUpperCase())
+      .join('')
+    : '?';
+
+  return (
+    <TouchableOpacity
+      onPress={() => console.log('Transaction:', tx)}
+      activeOpacity={0.7}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+      }}>
+      {/* Avatar with initials */}
+      <View
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: '#E0F2FE',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <Text style={{ fontSize: 14, fontWeight: '700', color: '#0369A1' }}>{initials}</Text>
+      </View>
+
+      {/* Details */}
+      <View style={{ marginLeft: 12, flex: 1 }}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: '#1F2937' }} numberOfLines={1}>
+          {tx.customerName || tx.description || 'Transaction'}
+        </Text>
+        <Text style={{ marginTop: 2, fontSize: 12, color: '#6B7280' }}>
+          {tx.transactionType} • {formatTime(tx.transactionDate)}
+        </Text>
+      </View>
+
+      {/* Amount & Status */}
+      <View style={{ alignItems: 'flex-end' }}>
+        <Text style={{ fontSize: 14, fontWeight: '700', color: '#1F2937' }}>
+          {formatAmount(tx.amount)}
+        </Text>
+        <Text
+          style={{
+            marginTop: 2,
+            fontSize: 12,
+            color: isSuccessful ? '#059669' : '#D97706',
+          }}>
+          {tx.status}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+
+function EmptyTransactions() {
+  return (
+    <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }}>
+      <View
+        style={{
+          marginBottom: 12,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: '#F3F4F6',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <Ionicons name="receipt-outline" size={28} color="#9CA3AF" />
+      </View>
+      <Text style={{ fontSize: 14, fontWeight: '600', color: '#4B5563' }}>No transactions yet</Text>
+      <Text style={{ marginTop: 4, fontSize: 12, color: '#9CA3AF' }}>
+        Your transaction history will appear here
+      </Text>
+    </View>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function HomePage() {
+  const queryClient = useQueryClient();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        Alert.alert(
+          'Exit App',
+          'Are you sure you want to exit?',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => null },
+            { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
+          ],
+          { cancelable: true }
+        );
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
+
+  const {
+    data: dashData,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: async () => {
+      const response = await getDashBoardData();
+      const data = response?.data?.data;
+
+      if (data) {
+        save('user', data);
+      }
+
+      return (
+        data ?? {
+          walletBalance: 0,
+          accountNumber: '',
+          accountName: '',
+          transactionHistory: [],
+        }
+      );
+    },
+    staleTime: 5 * 60 * 1000,
+    onError: (error) => {
+      Toast.show({
+        type: 'error',
+        text1: 'An Error Occurred',
+        text2: trimMessage(error?.message),
+      });
+    },
+  });
+
+  const limitedTransactions = dashData?.transactionHistory?.slice(0, 5) ?? [];
+  const transactionGroups = limitedTransactions.length
+    ? groupTransactionsByDate(limitedTransactions)
+    : null;
+
   const services = [
     {
       name: 'Transfer',
@@ -58,24 +315,22 @@ export default function HomePage() {
     },
   ];
 
-  async function getHomeData() {
-    try {
-      console.log('running to get home data');
-
-      const response = await getDashBoardData();
-      console.log(JSON.stringify(response, null, 2));
-    } catch (error) {
-      Toast.show({ type: 'error', text1: 'An Error Occured', text2: trimMessage(error?.message) });
-    }
-  }
-
-  // useEffect(() => {
-  //   getHomeData();
-  // }, []);
-
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      {/* Header */}
+    <ScrollView
+      className="flex-1"
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+            refetch();
+          }}
+          tintColor="#0E7490"
+          colors={['#0E7490']}
+        />
+      }>
+      {/* ── Header ── */}
       <View className="bg-white px-5 pb-4 pt-12">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
@@ -83,26 +338,35 @@ export default function HomePage() {
               source={require('../../assets/Ellipse 2.png')}
               className="mr-3 h-10 w-10 rounded-full"
             />
-            <Text className="text-base font-semibold text-gray-800">Hello John</Text>
+            {isLoading ? (
+              <Skeleton width={130} height={16} />
+            ) : (
+              <Text className="text-base font-semibold text-gray-800">
+                Hello {dashData?.accountName?.split(' ')[0] ?? 'there'} 👋
+              </Text>
+            )}
           </View>
-          <TouchableOpacity
-            onPress={() => {
-              navigateTo('notification');
-            }}>
+          <TouchableOpacity onPress={() => navigateTo('notification')}>
             <Ionicons name="notifications-outline" size={24} color="#374151" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Wallet Balance Card */}
+      {/* ── Wallet Balance Card ── */}
       <WalletBalanceCard
-        balance="₦ 45,465.87"
+        balance={
+          isLoading
+            ? '₦ --'
+            : dashData?.walletBalance != null
+              ? formatAmount(dashData.walletBalance)
+              : '₦ 0.00'
+        }
         points="3,145 Points"
-        walletNumber="0987654321"
+        walletNumber={isLoading ? '----------' : (dashData?.accountNumber ?? '----------')}
         showWalletName={true}
         showBalance={true}
         showBalanceToggle={true}
-        showDescription={false} // No description needed here
+        showDescription={false}
         showPoints={true}
         showWalletNumber={true}
         showCopyWallet={true}
@@ -110,7 +374,7 @@ export default function HomePage() {
         containerClassName="px-5 py-4"
       />
 
-      {/* Over View Section */}
+      {/* ── Over View ── */}
       <View className="mb-4 px-5">
         <Text className="mb-3 text-base font-semibold text-gray-800">Over View</Text>
         <View className="flex-row flex-wrap justify-between">
@@ -119,9 +383,7 @@ export default function HomePage() {
               key={index}
               className="mb-4 w-[30%] items-center justify-center rounded-xl p-4 shadow-xl"
               style={{ backgroundColor: service.color }}
-              onPress={() => {
-                navigateTo(service?.link);
-              }}
+              onPress={() => navigateTo(service?.link)}
               activeOpacity={0.7}>
               <Ionicons name={service.icon} size={28} color={service.iconColor} />
               <Text className="mt-2 text-xs font-medium text-gray-700">{service.name}</Text>
@@ -130,16 +392,14 @@ export default function HomePage() {
         </View>
       </View>
 
-      {/* Goodies Section */}
+      {/* ── Goodies ── */}
       <View className="mb-4 px-5">
         <Text className="mb-3 text-base font-semibold text-gray-800">Goodies</Text>
         <View className="flex-row justify-between">
           {goodies.map((goodie, index) => (
             <TouchableOpacity
               key={index}
-              onPress={() => {
-                navigateTo(goodie?.link);
-              }}
+              onPress={() => navigateTo(goodie?.link)}
               className="mr-2 flex-1 rounded-xl p-4"
               style={{ backgroundColor: goodie.bgColor }}>
               <Ionicons name={index === 0 ? 'gift' : 'cash'} size={24} color="white" />
@@ -160,33 +420,37 @@ export default function HomePage() {
         </View>
       </View>
 
-      {/* Transaction History */}
+      {/* ── Transaction History ── */}
       <View className="px-5 pb-6">
         <View className="mb-3 flex-row items-center justify-between">
           <Text className="text-base font-semibold text-gray-800">Transaction History</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => console.log('View All clicked')}>
             <Text className="text-sm font-medium text-[#0E7490]">View All</Text>
           </TouchableOpacity>
         </View>
 
-        <Text className="mb-3 text-xs text-gray-500">Today</Text>
-
-        <View className="rounded-xl bg-white p-4">
-          <View className="flex-row items-center">
-            <Image
-              source={{ uri: 'https://i.pravatar.cc/100?img=8' }}
-              className="h-12 w-12 rounded-full"
-            />
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-semibold text-gray-800">Daniel Gabriel</Text>
-              <Text className="mt-1 text-xs text-gray-500">Transfer • 16:32</Text>
-            </View>
-            <View className="items-end">
-              <Text className="text-sm font-bold text-gray-800">₦35,000.00</Text>
-              <Text className="mt-1 text-xs text-green-600">Successful</Text>
-            </View>
+        {/* Loading — animated skeleton */}
+        {isLoading ? (
+          <View>
+            <Skeleton width={40} height={11} style={{ marginBottom: 8 }} />
+            <TransactionSkeleton />
           </View>
-        </View>
+        ) : transactionGroups ? (
+          Object.entries(transactionGroups).map(([dateLabel, txs]) => (
+            <View key={dateLabel} className="mb-4">
+              <Text className="mb-2 text-xs text-gray-500">{dateLabel}</Text>
+              <View style={{ borderRadius: 12, backgroundColor: 'white', overflow: 'hidden' }}>
+                {txs.map((tx) => (
+                  <TransactionItem key={tx.id ?? tx.transactionId} tx={tx} />
+                ))}
+              </View>
+            </View>
+          ))
+        ) : (
+          <View style={{ borderRadius: 12, backgroundColor: 'white', overflow: 'hidden' }}>
+            <EmptyTransactions />
+          </View>
+        )}
       </View>
     </ScrollView>
   );

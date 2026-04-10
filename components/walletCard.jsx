@@ -68,7 +68,7 @@ const WalletBalanceCard = ({
     if (walletNumber) {
       await Clipboard.setStringAsync(walletNumber);
       onCopyWallet?.(walletNumber);
-      Alert.alert('Copied!', 'Wallet number copied to clipboard');
+      // Alert.alert('Copied!', 'Wallet number copied to clipboard');
     }
   };
 
@@ -219,7 +219,7 @@ const WalletBalanceCard = ({
           !showWithdrawButton &&
           !showShareButton &&
           !showCopyWallet && (
-            <View className="mt-4 ml-auto">
+            <View className="ml-auto mt-4">
               <Text className="mb-1 text-right text-xs text-white/80">Account Number</Text>
               <View className="flex-row items-center justify-end">
                 <Text className="text-base font-semibold text-white">{walletNumber}</Text>

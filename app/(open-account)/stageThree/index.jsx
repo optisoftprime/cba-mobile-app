@@ -17,14 +17,17 @@ import TouchBtn from 'components/touchBtn';
 import { Colors } from 'config/theme';
 import { GlobalStatusBar } from 'config/statusBar';
 import Toast from 'react-native-toast-message';
-import { save } from 'config/storage';
-import { validateOtp } from 'api/auth';
+import { remove, save } from 'config/storage';
+// import { validateOtp } from 'api/auth';
 
 export default function VerifyPhoneNumber() {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(154);
+  // ── OTP state (kept for when feature is re-enabled) ──────────────────────
+  // const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  // const [timer, setTimer] = useState(154);
+  // const inputRefs = useRef([]);
+  // ─────────────────────────────────────────────────────────────────────────
+
   const [isLoading, setIsLoading] = useState(false);
-  const inputRefs = useRef([]);
   const params = useLocalSearchParams();
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export default function VerifyPhoneNumber() {
   // Persist app state so users can resume after app close
   useEffect(() => {
     save('appState', {
-      stage: 'verifyPhoneNumber',
+      stage: 'stageThree',
       params: {
         phoneNumber: params?.phoneNumber,
         email: params?.email,
@@ -43,21 +46,32 @@ export default function VerifyPhoneNumber() {
     });
   }, []);
 
-  // Countdown timer
+  // Toast the bypass notice once on mount
   useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer]);
+    Toast.show({
+      type: 'info',
+      text1: 'Feature Temporarily Disabled',
+      text2: 'OTP verification is temporarily disabled. Tap Continue to proceed.',
+      visibilityTime: 4000,
+    });
+  }, []);
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  // ── Countdown timer (kept for when feature is re-enabled) ────────────────
+  // useEffect(() => {
+  //   if (timer > 0) {
+  //     const interval = setInterval(() => {
+  //       setTimer((prev) => prev - 1);
+  //     }, 1000);
+  //     return () => clearInterval(interval);
+  //   }
+  // }, [timer]);
+
+  // const formatTime = (seconds) => {
+  //   const mins = Math.floor(seconds / 60);
+  //   const secs = seconds % 60;
+  //   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  // };
+  // ─────────────────────────────────────────────────────────────────────────
 
   const handleCancelConfirm = () => {
     Alert.alert('Cancel Process', 'Are you sure you want to cancel? You will need to start over.', [
@@ -66,7 +80,7 @@ export default function VerifyPhoneNumber() {
         text: 'Yes, Cancel',
         style: 'destructive',
         onPress: () => {
-          save('appState', null);
+          remove('appState');
           navigateBack();
         },
       },
@@ -83,73 +97,72 @@ export default function VerifyPhoneNumber() {
     }, [])
   );
 
-  const handleOtpChange = (value, index) => {
-    if (!/^\d*$/.test(value)) return;
+  // ── OTP input handlers (kept for when feature is re-enabled) ─────────────
+  // const handleOtpChange = (value, index) => {
+  //   if (!/^\d*$/.test(value)) return;
+  //   const newOtp = [...otp];
+  //   newOtp[index] = value;
+  //   setOtp(newOtp);
+  //   if (value && index < 5) {
+  //     inputRefs.current[index + 1]?.focus();
+  //   }
+  // };
 
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
+  // const handleKeyPress = (e, index) => {
+  //   if (e.nativeEvent.key === 'Backspace') {
+  //     if (otp[index]) {
+  //       const newOtp = [...otp];
+  //       newOtp[index] = '';
+  //       setOtp(newOtp);
+  //     } else if (index > 0) {
+  //       const newOtp = [...otp];
+  //       newOtp[index - 1] = '';
+  //       setOtp(newOtp);
+  //       inputRefs.current[index - 1]?.focus();
+  //     }
+  //   }
+  // };
 
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyPress = (e, index) => {
-    if (e.nativeEvent.key === 'Backspace') {
-      if (otp[index]) {
-        const newOtp = [...otp];
-        newOtp[index] = '';
-        setOtp(newOtp);
-      } else if (index > 0) {
-        const newOtp = [...otp];
-        newOtp[index - 1] = '';
-        setOtp(newOtp);
-        inputRefs.current[index - 1]?.focus();
-      }
-    }
-  };
-
-  const handleResendCode = () => {
-    setTimer(154);
-    setOtp(['', '', '', '', '', '']);
-    inputRefs.current[0]?.focus();
-  };
+  // const handleResendCode = () => {
+  //   setTimer(154);
+  //   setOtp(['', '', '', '', '', '']);
+  //   inputRefs.current[0]?.focus();
+  // };
+  // ─────────────────────────────────────────────────────────────────────────
 
   const handleContinue = async () => {
-    const otpValue = otp.join('');
-    if (otpValue.length !== 6) {
-      Toast.show({ type: 'error', text1: 'Invalid OTP', text2: 'Please enter all 6 digits' });
-      return;
-    }
+    // ── Full OTP verification (uncomment to re-enable) ──────────────────────
+    // const otpValue = otp.join('');
+    // if (otpValue.length !== 6) {
+    //   Toast.show({ type: 'error', text1: 'Invalid OTP', text2: 'Please enter all 6 digits' });
+    //   return;
+    // }
+    // setIsLoading(true);
+    // const payload = {
+    //   otp: otpValue,
+    //   email: params?.email,
+    //   phoneNumber: params?.phoneNumber,
+    // };
+    // console.log('validateOtp payload:', JSON.stringify(payload, null, 2));
+    // const response = await validateOtp(null, payload);
+    // console.log('validateOtp response:', JSON.stringify(response, null, 2));
+    // if (response?.ok) {
+    //   Toast.show({ type: 'success', text1: 'OTP Verified!', text2: 'Proceeding to next step...' });
+    //   save('appState', null);
+    //   navigateTo(params?.nextScreen || 'openAccountSuccess');
+    // } else {
+    //   Toast.show({
+    //     type: 'error',
+    //     text1: 'Verification Failed',
+    //     text2: response?.message || 'Invalid OTP',
+    //   });
+    // }
+    // setIsLoading(false);
+    // ────────────────────────────────────────────────────────────────────────
 
-    setIsLoading(true);
-
-    const payload = {
-      otp: otpValue,
-      email: params?.email,
-      phoneNumber: params?.phoneNumber,
-    };
-
-    console.log('validateOtp payload:', JSON.stringify(payload, null, 2));
-
-    const response = await validateOtp(null, payload);
-
-    console.log('validateOtp response:', JSON.stringify(response, null, 2));
-
-    if (response?.ok) {
-      Toast.show({ type: 'success', text1: 'OTP Verified!', text2: 'Proceeding to next step...' });
-      save('appState', null);
-      navigateTo(params?.nextScreen || 'openAccountSuccess');
-    } else {
-      Toast.show({
-        type: 'error',
-        text1: 'Verification Failed',
-        text2: response?.message || 'Invalid OTP',
-      });
-    }
-
-    setIsLoading(false);
+    // Bypass: skip OTP and pass all params to the next screen
+    remove('appState');
+    navigateTo(params?.nextScreen || 'openAccountSuccess', { ...params });
   };
 
   return (
@@ -161,10 +174,10 @@ export default function VerifyPhoneNumber() {
         <View className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
           <View
             className="h-full rounded-full"
-            style={{ width: '50%', backgroundColor: Colors?.primary }}
+            style={{ width: '75%', backgroundColor: Colors?.primary }}
           />
         </View>
-        <Text className="mt-2 text-center text-xs text-gray-600">Step 3 of 6</Text>
+        <Text className="mt-2 text-center text-xs text-gray-600">Step 3 of 4</Text>
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -196,8 +209,8 @@ export default function VerifyPhoneNumber() {
             </Text>
           </View>
 
-          {/* OTP Input Boxes */}
-          <View className="mb-8 flex-row justify-center">
+          {/* ── OTP input boxes (uncomment to re-enable) ──────────────────────── */}
+          {/* <View className="mb-8 flex-row justify-center">
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
@@ -220,10 +233,11 @@ export default function VerifyPhoneNumber() {
                 }}
               />
             ))}
-          </View>
+          </View> */}
+          {/* ────────────────────────────────────────────────────────────────── */}
 
-          {/* Resend Code */}
-          <View className="mb-8 items-center">
+          {/* ── Resend code (uncomment to re-enable) ──────────────────────────── */}
+          {/* <View className="mb-8 items-center">
             <Text className="mb-1 text-sm text-gray-600">Didn't receive code?</Text>
             <TouchableOpacity onPress={handleResendCode} disabled={timer > 0 || isLoading}>
               <Text
@@ -232,6 +246,20 @@ export default function VerifyPhoneNumber() {
                 Resend {timer > 0 ? formatTime(timer) : ''}
               </Text>
             </TouchableOpacity>
+          </View> */}
+          {/* ────────────────────────────────────────────────────────────────── */}
+
+          {/* Bypass notice */}
+          <View
+            className="mb-8 rounded-lg p-4"
+            style={{ backgroundColor: Colors?.fade ?? '#EFF6FF' }}>
+            <Text className="text-center text-sm text-gray-600">
+              OTP verification is temporarily disabled.{'\n'}Tap{' '}
+              <Text className="font-semibold" style={{ color: Colors?.primary }}>
+                Continue
+              </Text>{' '}
+              to proceed.
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -243,7 +271,8 @@ export default function VerifyPhoneNumber() {
           label="Continue"
           isLoading={isLoading}
           loadingText="Verifying..."
-          disabled={otp.join('').length !== 6 || isLoading}
+          // disabled={otp.join('').length !== 6 || isLoading} // uncomment when re-enabling OTP
+          disabled={isLoading}
           textClassName="text-base font-bold text-white"
           buttonClassName="w-full items-center rounded-lg py-4"
           containerClassName=""

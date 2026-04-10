@@ -37,7 +37,7 @@ export default function NotFound() {
 
         {/* Back Button */}
         <TouchableOpacity
-          onPress={() => router.canGoBack() ? router.back() : router.replace('appLayout')}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('landingScreen')}
           className="w-full max-w-xs rounded-lg border border-gray-300 bg-white px-6 py-4"
           activeOpacity={0.8}>
           <Text className="text-center text-base font-semibold text-gray-700">

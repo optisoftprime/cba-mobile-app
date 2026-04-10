@@ -1,5 +1,4 @@
-// screens/WalletToWalletTransfer.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -8,128 +7,38 @@ import { navigateBack } from 'app/navigate';
 import TouchBtn from 'components/touchBtn';
 import TextInputComponent from 'components/textInputs';
 import EnterPINModal from 'components/EnterPINModal';
-import { validateAccountNumber, makeInternalTransfer } from 'api/transfer';
-import { Colors } from 'config/theme';
-
-const formatWithCommas = (value) => {
-  const digits = value.replace(/[^0-9.]/g, '');
-  const parts = digits.split('.');
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0];
-};
-
-const stripCommas = (value) => value.replace(/,/g, '');
+import { RecipientSuggestion } from './RecipientSuggestion.jsx';
+import { useWalletTransfer } from './useWalletTransfer';
 
 export default function WalletToWalletTransfer() {
-  const [walletNumber, setWalletNumber] = useState('');
-  const [validatedAccount, setValidatedAccount] = useState(null);
-  const [validating, setValidating] = useState(false);
-  const [validationError, setValidationError] = useState('');
-
-  const [amount, setAmount] = useState('');
-  const [narration, setNarration] = useState('');
-
-  const [pinModalVisible, setPinModalVisible] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const debounceRef = useRef(null);
-
-  const handleWalletNumberChange = (text) => {
-    const digits = text.replace(/[^0-9]/g, '');
-    setWalletNumber(digits);
-    setValidatedAccount(null);
-    setValidationError('');
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    if (digits.length === 10) {
-      debounceRef.current = setTimeout(async () => {
-        setValidating(true);
-        try {
-          const response = await validateAccountNumber({ accountNumber: digits });
-          if (response?.ok && response?.data?.data) {
-            setValidatedAccount(response.data.data);
-          } else {
-            setValidationError(response?.message ?? 'Account not found');
-          }
-        } catch (error) {
-          setValidationError(error?.message ?? 'Validation failed');
-        } finally {
-          setValidating(false);
-        }
-      }, 500);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
-
-  const handleContinue = () => {
-    if (!validatedAccount) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Recipient',
-        text2: 'Please enter a valid wallet number.',
-      });
-      return;
-    }
-    if (!amount) {
-      Toast.show({
-        type: 'error',
-        text1: 'Missing Amount',
-        text2: 'Please enter an amount to transfer.',
-      });
-      return;
-    }
-    setPinModalVisible(true);
-  };
-
-  const handlePinConfirm = async (pin) => {
-    setSubmitting(true);
-    try {
-      const response = await makeInternalTransfer(
-        {},
-        {
-          destinationAccountNumber: walletNumber,
-          amount: parseFloat(stripCommas(amount)),
-          description: narration,
-          transactionPin: pin,
-        }
-      );
-      if (response?.ok) {
-        setPinModalVisible(false);
-        Toast.show({
-          type: 'success',
-          text1: 'Transfer Successful',
-          text2: response?.data?.message ?? 'Your transfer was completed.',
-        });
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Transfer Failed',
-          text2: response?.message,
-        });
-      }
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'An error occurred',
-        text2: error?.message,
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const {
+    walletNumber,
+    amount,
+    narration,
+    setNarration,
+    validatedAccount,
+    validating,
+    validationError,
+    suggestions,
+    showSuggestions,
+    setShowSuggestions,
+    pinModalVisible,
+    setPinModalVisible,
+    submitting,
+    handleWalletNumberChange,
+    handleSelectSuggestion,
+    handleAmountChange,
+    handleContinue,
+    handlePinConfirm,
+  } = useWalletTransfer();
 
   return (
     <View className="flex-1 bg-white">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
         <Header
           title="Wallet to Wallet"
           onLeftPress={navigateBack}
@@ -138,18 +47,77 @@ export default function WalletToWalletTransfer() {
         />
 
         <View className="flex-1 px-4 pt-6">
-          <TextInputComponent
-            label="Recipient Wallet Number"
-            value={walletNumber}
-            onChangeText={handleWalletNumberChange}
-            placeholder="Enter 10-digit wallet number"
-            keyboardType="number-pad"
-            maxLength={10}
-            isLoading={validating}
-            containerStyle={{ marginBottom: 8 }}
-          />
+          {/* ── Wallet input + floating suggestions ── */}
+          <View style={{ zIndex: 10 }}>
+            <TextInputComponent
+              label="Recipient Wallet Number"
+              value={walletNumber}
+              onChangeText={handleWalletNumberChange}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder="Enter 10-digit wallet number"
+              keyboardType="number-pad"
+              maxLength={10}
+              isLoading={validating}
+              containerStyle={{ marginBottom: 0 }}
+            />
 
-          {/* Validated account card */}
+            {showSuggestions && !validatedAccount && !validationError && suggestions.length > 0 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 78,
+                  left: 0,
+                  right: 0,
+                  zIndex: 999,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E5E7EB',
+                  backgroundColor: '#fff',
+                  overflow: 'hidden',
+                  maxHeight: 320,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                  elevation: 8,
+                }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#F3F4F6',
+                    backgroundColor: '#FAFAFA',
+                  }}>
+                  <Ionicons name="time-outline" size={14} color="#6B7280" />
+                  <Text
+                    style={{ marginLeft: 6, fontSize: 12, color: '#6B7280', fontWeight: '500' }}>
+                    Recent recipients
+                  </Text>
+                </View>
+
+                <ScrollView
+                  scrollEnabled
+                  nestedScrollEnabled
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}>
+                  {suggestions.map((tx) => (
+                    <RecipientSuggestion
+                      key={tx.accountNumber}
+                      tx={tx}
+                      onPress={handleSelectSuggestion}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+
+          <View style={{ marginBottom: 16 }} />
+
+          {/* ── Verified account card ── */}
           {validatedAccount && (
             <View
               className="mb-5 flex-row items-center rounded-xl px-4 py-3"
@@ -169,7 +137,7 @@ export default function WalletToWalletTransfer() {
             </View>
           )}
 
-          {/* Validation error card */}
+          {/* ── Validation error card ── */}
           {validationError ? (
             <View
               className="mb-5 flex-row items-center rounded-xl px-4 py-3"
@@ -189,7 +157,7 @@ export default function WalletToWalletTransfer() {
           <TextInputComponent
             label="Amount"
             value={amount}
-            onChangeText={(text) => setAmount(formatWithCommas(text))}
+            onChangeText={handleAmountChange}
             placeholder="₦0.00"
             keyboardType="decimal-pad"
             containerStyle={{ marginBottom: 16 }}

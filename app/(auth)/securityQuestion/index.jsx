@@ -104,10 +104,7 @@ export default function SecurityQuestions() {
         text2: 'Security questions set successfully',
       });
       save('appState', null);
-      navigateTo('setTransactionPin', {
-        accountNumber: params?.accountNumber,
-        username: params?.username,
-      });
+      navigateTo("landingScreen")
     } else {
       Toast.show({
         type: 'error',

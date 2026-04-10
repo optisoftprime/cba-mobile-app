@@ -56,4 +56,8 @@ async function removeSecure(key) {
   }
 }
 
-export { save, load, remove, removeSecure, loadSecure, saveSecure };
+async function getUser() {
+  return load('user');
+}
+
+export { save, load, remove, removeSecure, loadSecure, saveSecure, getUser };

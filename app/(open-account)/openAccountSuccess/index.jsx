@@ -1,16 +1,30 @@
 // screens/CodeVerified.jsx
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, TouchableOpacity, BackHandler } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { navigateTo } from 'app/navigate';
+import { navigateReplace, navigateTo } from 'app/navigate';
 import TouchBtn from 'components/touchBtn';
 import { Colors } from 'config/theme';
+import { useFocusEffect } from 'expo-router';
 
 export default function CodeVerified() {
   const handleContinue = () => {
-    navigateTo('openAccountSecurity');
+    navigateReplace('landingScreen');
     // Navigate to next screen
   };
+
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        navigateReplace('landingScreen');
+        return true;
+      };
+
+      const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => sub.remove();
+    }, [])
+  );
 
   return (
     <View className="flex-1 bg-white">
@@ -19,10 +33,10 @@ export default function CodeVerified() {
         <View className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
           <View
             className={`h-full rounded-full `}
-            style={{ width: '66.66%', backgroundColor: Colors?.primary }}
+            style={{ width: '100%', backgroundColor: Colors?.primary }}
           />
         </View>
-        <Text className="mt-2 text-center text-xs text-gray-600">Step 4 of 6</Text>
+        <Text className="mt-2 text-center text-xs text-gray-600">Step 4 of 4</Text>
       </View>
 
       {/* Main Content */}

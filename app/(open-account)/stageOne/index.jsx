@@ -132,10 +132,10 @@ export default function PersonalInformation() {
           <View className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
             <View
               className="h-full rounded-full"
-              style={{ width: '16.66%', backgroundColor: Colors?.primary }}
+              style={{ width: '20%', backgroundColor: Colors?.primary }}
             />
           </View>
-          <Text className="mt-2 text-center text-xs text-gray-600">Step 1 of 6</Text>
+          <Text className="mt-2 text-center text-xs text-gray-600">Step 1 of 4</Text>
         </View>
 
         <Header
