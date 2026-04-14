@@ -32,6 +32,7 @@ export function useLoanApplication() {
         queryKey: ['loanProducts'],
         queryFn: async () => {
             const response = await fetchAllLoanProducts();
+            // console.log(JSON.stringify(response, null, 2));
             if (response?.ok && response?.data?.data) return response.data.data;
             Toast.show({
                 type: 'error',
@@ -45,7 +46,7 @@ export function useLoanApplication() {
 
     const isBusy = loadingProducts || bookingLoan;
 
-    // ── Derived data ─────────────────────────────────────────────────────────
+    // ── Derived data ───────────────────────────────────────────────────────────────────
 
     const productOptions = loanProducts.map((p) => ({ label: p.name, value: String(p.id) }));
 

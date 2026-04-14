@@ -1,159 +1,180 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, ScrollView, RefreshControl } from 'react-native';
 import Header from 'components/header';
-import { navigateBack, navigateTo } from 'app/navigate';
+import { navigateBack } from 'app/navigate';
 import Dropdown from 'components/dropDown';
 import TouchBtn from 'components/touchBtn';
 import WalletBalanceCard from 'components/walletCard';
+import TextInputComponent from 'components/textInputs';
 import { Colors } from 'config/theme';
+import { GlobalStatusBar } from 'config/statusBar';
+import { ProductSummaryCard, SavingsInfoCard } from './SavingsFormCards';
+import { useSavingsApplication } from './useSavingsApplication';
 
 export default function RizeSpringForm() {
-  const [savingsType, setSavingsType] = useState('');
-  const [savingsAmount, setSavingsAmount] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [sourceOfFunds, setSourceOfFunds] = useState('');
-  const [autoDebit, setAutoDebit] = useState(false);
-
-  const [showSavingsTypeDropdown, setShowSavingsTypeDropdown] = useState(false);
-  const [showSourceDropdown, setShowSourceDropdown] = useState(false);
-
-  const savingsTypeOptions = [
-    { label: 'Regular Savings', value: 'regular' },
-    { label: 'Emergency Fund', value: 'emergency' },
-    { label: 'Vacation Fund', value: 'vacation' },
-  ];
-
-  const sourceOptions = [
-    { label: 'Main Wallet', value: 'main_wallet' },
-    { label: 'Bank Account', value: 'bank_account' },
-    { label: 'Card', value: 'card' },
-  ];
-
-  const handleContinue = () => {
-    // console.log('Form submitted:', {
-    //   savingsType,
-    //   savingsAmount,
-    //   startDate,
-    //   endDate,
-    //   sourceOfFunds,
-    //   autoDebit,
-    // });
-    navigateTo('rizeSpringsSavings');
-  };
+  const {
+    amount,
+    description,
+    setDescription,
+    transactionMode,
+    setTransactionMode,
+    tenorDuration,
+    setTenorDuration,
+    savingAccountNumber,
+    setSavingAccountNumber,
+    showProductDropdown,
+    showTransactionModeDropdown,
+    showTenorDropdown,
+    selectedProduct,
+    loadingProducts,
+    bookingSaving,
+    isBusy,
+    isRefetching,
+    refetch,
+    productOptions,
+    transactionModeOptions,
+    tenorOptions,
+    amountError,
+    handleAmountChange,
+    handleProductSelect,
+    handleToggleProductDropdown,
+    handleToggleTransactionModeDropdown,
+    handleToggleTenorDropdown,
+    handleBookSaving,
+  } = useSavingsApplication();
 
   return (
     <View className="flex-1 bg-white">
+      <GlobalStatusBar style="dark-content" />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}>
-        {/* Header */}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[Colors?.primary]}
+            tintColor={Colors?.primary}
+          />
+        }>
         <Header
-          title="RizeSpring Savings"
-          showLeftIcon={true}
+          title="Fixed Savings Plan"
           onLeftPress={navigateBack}
+          showLeftIcon={true}
           color="black"
         />
 
-        {/* Wallet Card */}
         <WalletBalanceCard
+          walletName="Savings Wallet"
+          balance="₦0.00"
+          description={
+            selectedProduct
+              ? `${selectedProduct.interestRate}% Interest Rate`
+              : 'Select a product'
+          }
+          backgroundImagePath={require('../../../assets/Vector .png')}
           color="#513B56"
-          description="Across 7 savings plans"
-          points="0 Points"
           showWalletName={true}
           showBalance={true}
           showBalanceToggle={true}
           showDescription={true}
-          showDescriptionButton={true}
-          showPoints={true}
+          showDescriptionButton={false}
+          showPoints={false}
           showWalletNumber={false}
           showCopyWallet={false}
           showTopRightButton={false}
           containerClassName="mx-5 mb-8"
         />
 
-        <View className="flex-1 px-5 pt-6">
-          {/* Savings Types Dropdown */}
+        <View className="flex-1 px-5">
           <Dropdown
-            label="Savings Types"
-            placeholder="Select savings types"
-            value={savingsType}
-            options={savingsTypeOptions}
-            onSelect={(value) => {
-              setSavingsType(value);
-              setShowSavingsTypeDropdown(false);
-            }}
-            isOpen={showSavingsTypeDropdown}
-            onToggle={() => setShowSavingsTypeDropdown(!showSavingsTypeDropdown)}
+            label="Savings Product"
+            placeholder={loadingProducts ? 'Loading...' : 'Select a savings product'}
+            value={selectedProduct ? String(selectedProduct.id) : ''}
+            options={loadingProducts ? [] : productOptions}
+            onSelect={handleProductSelect}
+            isOpen={showProductDropdown && !isBusy}
+            onToggle={handleToggleProductDropdown}
+            isLoading={isBusy}
+            search
           />
 
-          {/* Savings Amount */}
-          <View className="mb-4">
-            <View className="mb-2 flex-row items-center justify-between">
-              <Text className="text-sm font-semibold text-gray-900">Savings Amount</Text>
-            </View>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={savingsAmount}
-              onChangeText={setSavingsAmount}
-              placeholder="₦0.00"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="decimal-pad"
-            />
-          </View>
+          <ProductSummaryCard product={selectedProduct} />
+          {/* <SavingsInfoCard product={selectedProduct} /> */}
 
-          {/* Start Date */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Start Date</Text>
-            <TouchableOpacity className="flex-row items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
-              <Text className="flex-1 text-base text-gray-400">Select start date</Text>
-              <Ionicons name="calendar-outline" size={20} color={Colors?.primary} />
-            </TouchableOpacity>
-          </View>
-
-          {/* End Date */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">End Date</Text>
-            <TouchableOpacity className="flex-row items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
-              <Text className="flex-1 text-base text-gray-400">Select end date</Text>
-              <Ionicons name="calendar-outline" size={20} color={Colors?.primary} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Source of Funds Dropdown */}
-          <Dropdown
-            label="Source of Funds"
-            placeholder="Select source of funds"
-            value={sourceOfFunds}
-            options={sourceOptions}
-            onSelect={(value) => {
-              setSourceOfFunds(value);
-              setShowSourceDropdown(false);
-            }}
-            isOpen={showSourceDropdown}
-            onToggle={() => setShowSourceDropdown(!showSourceDropdown)}
+          <TextInputComponent
+            label="Amount"
+            value={amount}
+            onChangeText={handleAmountChange}
+            placeholder="₦0.00"
+            keyboardType="decimal-pad"
+            error={amountError}
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 16, marginTop: 12 }}
           />
 
-          {/* Auto Debit Toggle */}
-          <View className="mb-8 flex-row items-center justify-between">
-            <Text className="text-sm font-semibold text-gray-900">Auto Debit</Text>
-            <Switch
-              value={autoDebit}
-              onValueChange={setAutoDebit}
-              trackColor={{ false: '#D1D5DB', true: Colors?.secondary }}
-              thumbColor={autoDebit ? Colors?.primary : '#F3F4F6'}
-            />
-          </View>
+          <TextInputComponent
+            label="Description"
+            value={description}
+            onChangeText={setDescription}
+            placeholder="e.g. Saving for a new car"
+            returnKeyType="done"
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 16 }}
+          />
+
+          <Dropdown
+            label="Transaction Mode"
+            placeholder="Select transaction mode"
+            value={transactionMode}
+            options={transactionModeOptions}
+            onSelect={setTransactionMode}
+            isOpen={showTransactionModeDropdown && !isBusy}
+            onToggle={handleToggleTransactionModeDropdown}
+            isLoading={isBusy}
+          />
+
+          <Dropdown
+            label="Tenor / Duration"
+            placeholder={selectedProduct ? 'Select duration' : 'Select a product first'}
+            value={tenorDuration}
+            options={tenorOptions}
+            onSelect={setTenorDuration}
+            isOpen={showTenorDropdown && !isBusy}
+            onToggle={handleToggleTenorDropdown}
+            isLoading={isBusy}
+            style={{ marginTop: 15 }}
+
+          />
+
+          <TextInputComponent
+            label="Interest Rate"
+            value={selectedProduct ? `${selectedProduct.interestRate}%` : '—'}
+            editable={false}
+            isLoading={isBusy}
+            inputStyle={{ backgroundColor: '#F3F4F6' }}
+            containerStyle={{ marginBottom: 16, marginTop: 10 }}
+          />
+
+          <TextInputComponent
+            label="Saving Account Number"
+            value={savingAccountNumber}
+            onChangeText={setSavingAccountNumber}
+            placeholder="Enter account number"
+            keyboardType="number-pad"
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 32 }}
+          />
         </View>
 
-        {/* Continue Button */}
         <View className="px-5 pb-6">
           <TouchBtn
-            onPress={handleContinue}
+            onPress={handleBookSaving}
             label="Continue"
-            textClassName="text-base font-semibold "
+            isLoading={bookingSaving}
+            loadingText="Booking..."
+            textClassName="text-base font-semibold"
             buttonClassName="items-center rounded-lg py-4"
             activeOpacity={0.8}
             containerClassName=""

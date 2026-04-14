@@ -1,6 +1,6 @@
 // screens/LoanInfo.jsx
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
+import { View, Text, ScrollView, Image, StatusBar } from 'react-native';
 import { navigateTo } from 'app/navigate';
 import TouchBtn from 'components/touchBtn';
 
@@ -25,51 +25,40 @@ export default function LoanInfo() {
         <View className="mb-6">
           <Text className="mb-3 text-base font-bold text-white">Benefits/Features</Text>
           <View className="space-y-2">
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Quick approval and disbursement
-              </Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Flexible repayment schedules
-              </Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Competitive interest rates
-              </Text>
-            </View>
+            {['Quick approval and disbursement', 'Flexible repayment schedules', 'Competitive interest rates'].map((item) => (
+              <View key={item} className="flex-row items-start">
+                <Text className="mr-2 text-white">•</Text>
+                <Text className="flex-1 text-sm leading-6 text-white">{item}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
         <View className="mb-8">
           <Text className="mb-3 text-base font-bold text-white">Interest/Rewards</Text>
           <View className="space-y-2">
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">6% monthly</Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Rewards: Earn points for timely repayment
-              </Text>
-            </View>
+            {['6% monthly', 'Rewards: Earn points for timely repayment'].map((item) => (
+              <View key={item} className="flex-row items-start">
+                <Text className="mr-2 text-white">•</Text>
+                <Text className="flex-1 text-sm leading-6 text-white">{item}</Text>
+              </View>
+            ))}
           </View>
         </View>
       </ScrollView>
 
       <View className="gap-y-3 px-4 pb-8 pt-4">
-        <TouchableOpacity
+        <TouchBtn
           onPress={() => navigateTo('loans')}
-          className="w-full items-center rounded-lg border border-white py-4"
-          activeOpacity={0.8}>
-          <Text className="text-base font-bold text-white">View My Loans</Text>
-        </TouchableOpacity>
+          label="View My Loans"
+          backgroundColor="transparent"
+          textColor="white"
+          borderColor="white"
+          borderWidth={1}
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
 
         <TouchBtn
           onPress={() => navigateTo('loanForm')}

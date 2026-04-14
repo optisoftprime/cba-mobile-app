@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Toast from 'react-native-toast-message';
-import { useQuery } from '@tanstack/react-query';
+import { QueryClient, useQuery } from '@tanstack/react-query';
 import { validateAccountNumber, makeInternalTransfer } from 'api/transfer';
 import { getDashBoardData } from 'api/home';
 import { formatWithCommas, getUniqueRecipients, stripCommas } from 'helper';
 import { navigateReplace } from 'app/navigate';
+import { useQueryClient } from '@tanstack/react-query'; // or 'react-query'
+
 
 export function useWalletTransfer() {
     const [walletNumber, setWalletNumber] = useState('');
@@ -12,6 +14,7 @@ export function useWalletTransfer() {
     const [validating, setValidating] = useState(false);
     const [validationError, setValidationError] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const queryClient = useQueryClient();
 
     const [amount, setAmount] = useState('');
     const [narration, setNarration] = useState('');
@@ -138,6 +141,9 @@ export function useWalletTransfer() {
                     text1: 'Transfer Successful',
                     text2: response?.message ?? 'Your transfer was completed.',
                 });
+                await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+
+
                 navigateReplace('transactionReceipt');
             } else {
                 Toast.show({ type: 'error', text1: 'Transfer Failed', text2: response?.message });

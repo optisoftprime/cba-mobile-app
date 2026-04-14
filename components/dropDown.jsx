@@ -28,14 +28,17 @@ export default function Dropdown({
   triggerTextStyle = {},
   triggerIconColor,
   triggerIconSize = 20,
-  // when true, the built-in trigger button is not rendered at all.
-  // use this when you want to drive the modal from your own button.
   hideTrigger = false,
+  style = {}
 }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) setSearchQuery('');
+    if (!isOpen) {
+      setSearchQuery('');
+      setSearchFocused(false);
+    }
   }, [isOpen]);
 
   const selectedOption = options.find((option) => option.value === value);
@@ -47,7 +50,7 @@ export default function Dropdown({
   const chevronColor = triggerIconColor ?? (isLoading ? '#D1D5DB' : '#9CA3AF');
 
   return (
-    <View>
+    <View style={style}>
       {!!label && !hideTrigger && (
         <Text
           style={{
@@ -129,7 +132,7 @@ export default function Dropdown({
                     flexDirection: 'row',
                     alignItems: 'center',
                     borderWidth: 1,
-                    borderColor: '#D1D5DB',
+                    borderColor: searchFocused ? '#6B7280' : '#D1D5DB',
                     borderRadius: 8,
                     backgroundColor: '#F9FAFB',
                     paddingHorizontal: 12,
@@ -142,7 +145,9 @@ export default function Dropdown({
                     placeholderTextColor="#9CA3AF"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    autoFocus
+                    autoFocus={false}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
                     returnKeyType="search"
                   />
                   {searchQuery.length > 0 && (

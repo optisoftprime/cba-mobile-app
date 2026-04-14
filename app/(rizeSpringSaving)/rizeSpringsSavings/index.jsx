@@ -1,10 +1,11 @@
 // screens/RizeSpringList.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Header from 'components/header';
 import { navigateBack, navigateTo } from 'app/navigate';
 import WalletBalanceCard from 'components/walletCard';
 import { Colors } from 'config/theme';
+import { fetchAllSavingProducts } from 'api/save';
 
 export default function RizeSpringList() {
   const savingsPlans = [
@@ -50,6 +51,16 @@ export default function RizeSpringList() {
     // console.log('View details for plan:', planId);
     // navigateTo('rizeSpringDetails', { id: planId });
   };
+
+
+  useEffect(() => {
+    async function getStuff() {
+      const response = await fetchAllSavingProducts()
+      console.log(JSON.stringify(response, null, 2));
+    }
+
+    getStuff()
+  }, [])
 
   return (
     <View className="flex-1 bg-gray-50">

@@ -6,38 +6,38 @@ import { navigateTo } from 'app/navigate';
 import WalletBalanceCard from 'components/walletCard';
 
 export default function SavingsPage() {
-  const strictPlans = [
+  const savingsPlans = [
     {
-      id: 'rizespring',
-      title: 'RizeSpring Savings',
-      description: 'Automatic, daily, weekly, or monthly saving',
+      id: 'fixed',
+      title: 'Fixed Savings',
+      description: 'Best for locking money and earning interest',
       color: '#F0F9FF',
       imagePath: require('../../assets/image 29.png'),
-      link: 'rizeSpringSavingData', // Make sure this matches your route name
+      link: 'rizeSpringSavingData',
     },
     {
       id: 'target',
       title: 'Target Savings',
-      description: 'Smash your savings goal faster',
+      description: 'Goal-oriented savings',
       color: '#E0E7FF',
       imagePath: require('../../assets/image 61.png'),
-      link: 'targetSavingData', // Make sure this matches your route name
+      link: 'targetSavingData',
     },
     {
-      id: 'project',
-      title: 'Project Savings',
-      description: 'Automatic, daily, weekly, or monthly savings',
+      id: 'group',
+      title: 'Group Savings',
+      description: 'For collective saving',
       color: '#FEF08A',
       imagePath: require('../../assets/image 51.png'),
-      link: 'projectSavingData', // Add a link if you want it to navigate
+      link: 'projectSavingData',
     },
     {
-      id: 'children',
-      title: 'Children Savings',
-      description: 'Automatic, daily, weekly, or monthly savings',
+      id: 'compulsory',
+      title: 'Annuity',
+      description: 'Strict/mandatory savings',
       color: '#ECFDF5',
       imagePath: require('../../assets/image 35.png'),
-      link: 'childrenSavingData', // Add a link if you want it to navigate
+      link: 'childrenSavingData',
     },
   ];
 
@@ -47,10 +47,9 @@ export default function SavingsPage() {
     description: 'Automatic, daily, weekly, or monthly savings',
     color: '#FFFBEB',
     imagePath: require('../../assets/image 62.png'),
-    link: 'fixedDepositData', 
+    link: 'fixedDepositData',
   };
 
-  // Function to handle navigation to savings plan details
   const handlePlanPress = (plan) => {
     console.log('Plan object:', plan);
     console.log('Link value:', plan.link);
@@ -62,17 +61,14 @@ export default function SavingsPage() {
     }
   };
 
-  // Handle when "Across 7 savings plans" button is pressed
   const handleSavingsPlansPress = () => {
     router.push('/savings/all-plans');
   };
 
   return (
     <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
-      {/* Header */}
       <Header title={'My Savings'} showLeftIcon={true} color="black" />
 
-      {/* Wallet Balance Card Component */}
       <WalletBalanceCard
         walletName="RizeSpring Savings Wallet"
         balance="₦0.00"
@@ -91,17 +87,16 @@ export default function SavingsPage() {
         containerClassName="mx-5 mb-8"
       />
 
-      {/* Strict Savings Plans */}
+      {/* Savings Plans */}
       <View className="mb-8 px-5">
-        <Text className="mb-4 text-base font-semibold text-gray-800">Strict Savings Plans</Text>
+        <Text className="mb-4 text-base font-semibold text-gray-800">Savings Plans</Text>
         <View className="flex-row flex-wrap justify-between">
-          {strictPlans.map((plan, index) => (
+          {savingsPlans.map((plan) => (
             <TouchableOpacity
-              key={index}
+              key={plan.id}
               className="mb-4 w-[48%] items-center rounded-2xl p-5"
               style={{ backgroundColor: plan.color }}
               onPress={() => handlePlanPress(plan)}>
-              {/* Pass the entire plan object */}
               <Image
                 source={plan.imagePath}
                 style={{ width: 60, height: 60, marginBottom: 12 }}
@@ -121,7 +116,6 @@ export default function SavingsPage() {
           className="items-center rounded-2xl p-5"
           style={{ backgroundColor: investment.color }}
           onPress={() => handlePlanPress(investment)}>
-          {/* Pass the entire investment object */}
           <Image
             source={investment.imagePath}
             style={{ width: 60, height: 60, marginBottom: 12 }}

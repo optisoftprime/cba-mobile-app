@@ -4,6 +4,7 @@ app == stores data like has the user opened the app before
 all the amount inputs mush have 2dp ALL OF THEM THIS IS ALSO URGENT
 REDO THE FILES ALREADY DONE FOR MORE EFFICENCY like too much data in one file 
 all the inputs for amounts must have decimal accceptance 
+the loans fetched whe booking should be filtered to only the approved loans 
 
 
 // All
