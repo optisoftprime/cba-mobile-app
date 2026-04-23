@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, ScrollView, RefreshControl } from 'react-native';
+import { View, RefreshControl } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Header from 'components/header';
 import { navigateBack } from 'app/navigate';
 import Dropdown from 'components/dropDown';
@@ -8,8 +9,8 @@ import WalletBalanceCard from 'components/walletCard';
 import TextInputComponent from 'components/textInputs';
 import { Colors } from 'config/theme';
 import { GlobalStatusBar } from 'config/statusBar';
-import { ProductSummaryCard, SavingsInfoCard } from './SavingsFormCards';
-import { useSavingsApplication } from './useSavingsApplication';
+import { ProductSummaryCard, SavingsInfoCard } from '../../../components/SavingsFormCards';
+import { useSavingsApplication } from '../../../components/useSavingsApplication';
 
 export default function RizeSpringForm() {
   const {
@@ -41,15 +42,19 @@ export default function RizeSpringForm() {
     handleToggleTransactionModeDropdown,
     handleToggleTenorDropdown,
     handleBookSaving,
+    interestRateOptions
   } = useSavingsApplication();
 
   return (
     <View className="flex-1 bg-white">
       <GlobalStatusBar style="dark-content" />
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        extraScrollHeight={100}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -101,7 +106,6 @@ export default function RizeSpringForm() {
           />
 
           <ProductSummaryCard product={selectedProduct} />
-          {/* <SavingsInfoCard product={selectedProduct} /> */}
 
           <TextInputComponent
             label="Amount"
@@ -125,27 +129,15 @@ export default function RizeSpringForm() {
           />
 
           <Dropdown
-            label="Transaction Mode"
-            placeholder="Select transaction mode"
-            value={transactionMode}
-            options={transactionModeOptions}
-            onSelect={setTransactionMode}
-            isOpen={showTransactionModeDropdown && !isBusy}
-            onToggle={handleToggleTransactionModeDropdown}
-            isLoading={isBusy}
-          />
-
-          <Dropdown
             label="Tenor / Duration"
             placeholder={selectedProduct ? 'Select duration' : 'Select a product first'}
             value={tenorDuration}
-            options={tenorOptions}
+            options={interestRateOptions}
             onSelect={setTenorDuration}
             isOpen={showTenorDropdown && !isBusy}
             onToggle={handleToggleTenorDropdown}
             isLoading={isBusy}
-            style={{ marginTop: 15 }}
-
+            style={{ marginTop: 10 }}
           />
 
           <TextInputComponent
@@ -154,7 +146,7 @@ export default function RizeSpringForm() {
             editable={false}
             isLoading={isBusy}
             inputStyle={{ backgroundColor: '#F3F4F6' }}
-            containerStyle={{ marginBottom: 16, marginTop: 10 }}
+            containerStyle={{ marginBottom: 16, marginTop: 20 }}
           />
 
           <TextInputComponent
@@ -180,7 +172,7 @@ export default function RizeSpringForm() {
             containerClassName=""
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

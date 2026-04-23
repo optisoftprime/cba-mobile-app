@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import WalletBalanceCard from 'components/walletCard';
-import { navigateTo } from 'app/navigate';
+import { navigateBack, navigateReplace, navigateTo } from 'app/navigate';
 import Toast from 'react-native-toast-message';
 import { trimMessage } from 'helper';
 import { getDashBoardData } from 'api/home';
@@ -136,7 +136,6 @@ function TransactionItem({ tx }) {
         borderBottomWidth: 1,
         borderBottomColor: '#F3F4F6',
       }}>
-      {/* Avatar with initials */}
       <View
         style={{
           width: 48,
@@ -149,7 +148,6 @@ function TransactionItem({ tx }) {
         <Text style={{ fontSize: 14, fontWeight: '700', color: '#0369A1' }}>{initials}</Text>
       </View>
 
-      {/* Details */}
       <View style={{ marginLeft: 12, flex: 1 }}>
         <Text style={{ fontSize: 14, fontWeight: '600', color: '#1F2937' }} numberOfLines={1}>
           {tx.customerName || tx.description || 'Transaction'}
@@ -159,7 +157,6 @@ function TransactionItem({ tx }) {
         </Text>
       </View>
 
-      {/* Amount & Status */}
       <View style={{ alignItems: 'flex-end' }}>
         <Text style={{ fontSize: 14, fontWeight: '700', color: '#1F2937' }}>
           {formatAmount(tx.amount)}
@@ -236,21 +233,21 @@ export default function HomePage() {
     queryFn: async () => {
       const response = await getDashBoardData();
       const data = response?.data?.data;
+      console.log(data)
 
-      if (data) {
-        save('user', data);
+      if (!data || !data?.accountName || !data?.transactionHistory) {
+        Toast.show({ type: 'error', text1: 'An Error Occurred', text2: 'Account Not Found' });
+        navigateReplace("landingScreen");
+        return null;
+      } else {
+        await save('user', data);
       }
 
-      return (
-        data ?? {
-          walletBalance: 0,
-          accountNumber: '',
-          accountName: '',
-          transactionHistory: [],
-        }
-      );
+      // await save('user', data);
+
+      return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     onError: (error) => {
       Toast.show({
         type: 'error',
@@ -429,7 +426,6 @@ export default function HomePage() {
           </TouchableOpacity>
         </View>
 
-        {/* Loading — animated skeleton */}
         {isLoading ? (
           <View>
             <Skeleton width={40} height={11} style={{ marginBottom: 8 }} />

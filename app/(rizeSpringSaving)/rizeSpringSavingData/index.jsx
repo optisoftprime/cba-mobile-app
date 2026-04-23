@@ -1,4 +1,3 @@
-// screens/TargetSavingsInfo.jsx
 import React from 'react';
 import { View, Text, ScrollView, Image, StatusBar } from 'react-native';
 import { navigateTo } from 'app/navigate';
@@ -57,7 +56,7 @@ export default function TargetSavingsInfo() {
       <View className="gap-y-3 px-4 pb-8 pt-4">
         <TouchBtn
           onPress={() => navigateTo('rizeSpringsSavings')}
-          label="View RizeSpring Savings"
+          label="View Fixed Savings"
           backgroundColor="transparent"
           textColor="white"
           borderColor="white"

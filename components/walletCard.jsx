@@ -1,6 +1,6 @@
 // components/WalletBalanceCard.jsx
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Image, Alert, Animated } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Colors } from 'config/theme';
@@ -57,6 +57,79 @@ const WalletBalanceCard = ({
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
   const [isHidden, setIsHidden] = useState(false);
 
+  // Animation values for floating circles
+  const topRightX = new Animated.Value(0);
+  const topRightY = new Animated.Value(0);
+  const bottomLeftX = new Animated.Value(0);
+  const bottomLeftY = new Animated.Value(0);
+
+  // Start animations on mount
+  useEffect(() => {
+    // Top right circle X animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(topRightX, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(topRightX, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Top right circle Y animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(topRightY, {
+          toValue: 1,
+          duration: 3500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(topRightY, {
+          toValue: 0,
+          duration: 3500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Bottom left circle X animation (offset for variety)
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bottomLeftX, {
+          toValue: 1,
+          duration: 3200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomLeftX, {
+          toValue: 0,
+          duration: 3200,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Bottom left circle Y animation (offset for variety)
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bottomLeftY, {
+          toValue: 1,
+          duration: 3800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomLeftY, {
+          toValue: 0,
+          duration: 3800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
   const toggleBalanceVisibility = () => {
     const newVisibility = !isBalanceVisible;
     setIsBalanceVisible(newVisibility);
@@ -111,9 +184,45 @@ const WalletBalanceCard = ({
           />
         )}
 
-        {/* Gradient circles */}
-        <View className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white opacity-20" />
-        <View className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white opacity-10" />
+        {/* Gradient circles with floating animation */}
+        <Animated.View
+          className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white opacity-20"
+          style={{
+            transform: [
+              {
+                translateX: topRightX.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 20],
+                }),
+              },
+              {
+                translateY: topRightY.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -20],
+                }),
+              },
+            ],
+          }}
+        />
+        <Animated.View
+          className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white opacity-10"
+          style={{
+            transform: [
+              {
+                translateX: bottomLeftX.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -20],
+                }),
+              },
+              {
+                translateY: bottomLeftY.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 20],
+                }),
+              },
+            ],
+          }}
+        />
 
         {/* Top Right Button (Optional) */}
         {showTopRightButton && topRightText && topRightAction && (

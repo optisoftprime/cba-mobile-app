@@ -9,26 +9,21 @@
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": [
-      "expo-router",
-      "@react-native-community/datetimepicker"
-    ],
+    "plugins": ["expo-router", "@react-native-community/datetimepicker"],
     "orientation": "portrait",
     "icon": "./assets/cropedAppLogo.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/cropedAppLogo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "UIViewControllerBasedStatusBarAppearance": false,
-        "UIStatusBarHidden": false
+        "UIStatusBarHidden": true
       }
     },
     "android": {
@@ -37,15 +32,15 @@
         "foregroundImage": "./assets/cropedAppLogo.png",
         "backgroundColor": "#ffffff"
       },
+      "softwareKeyboardLayoutMode": "pan",
       "statusBar": {
-        "hidden": false,
-        "backgroundColor": "#ffffff",
-        "translucent": false,
-        "barStyle": "dark-content"
+        "hidden": true,
+        "translucent": true,
+        "backgroundColor": "#000000"
       },
       "navigationBar": {
         "visible": "sticky-immersive",
-        "backgroundColor": "#ffffff",
+        "backgroundColor": "#000000",
         "barStyle": "dark-content"
       }
     },

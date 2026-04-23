@@ -2,6 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { Alert } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export function navigateTo(path, params = {}) {
   try {
@@ -12,7 +13,7 @@ export function navigateTo(path, params = {}) {
       router.push(path);
     }
   } catch (error) {
-    Alert.alert('Navigation error', error?.message || 'Unable to navigate to the page');
+    Toast.show({ type: "error", text1: "Navigation Error", text2: error?.message })
   }
 }
 
@@ -24,6 +25,8 @@ export function navigateBack(fallback = 'landingScreen') {
       router.replace(fallback);
     }
   } catch (error) {
+    Toast.show({ type: "error", text1: "Navigation Error", text2: error?.message })
+
     router.replace(fallback);
   }
 }
@@ -37,7 +40,7 @@ export function navigateReplace(path, params = {}) {
       router.replace(path);
     }
   } catch (error) {
-    Alert.alert('Navigation error', error?.message || 'Unable to navigate to the page');
+    Toast.show({ type: "error", text1: "Navigation Error", text2: error?.message })
   }
 }
 

@@ -1,76 +1,87 @@
+// screens/TargetSavingsInfo.jsx
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text, ScrollView, Image, StatusBar } from 'react-native';
 import { navigateTo } from 'app/navigate';
 import TouchBtn from 'components/touchBtn';
 
-export default function TargetSavingsPage() {
+export default function TargetSavingsInfo() {
   return (
-    <ScrollView className="flex-1 bg-[#B4872A]">
-      {/* Header Image */}
-      <View className="mx-5 mt-20 overflow-hidden rounded-2xl bg-white p-6">
-        <Image
-          source={require('../../../assets/Frame 2147223550.png')}
-          className="h-48 w-full rounded-lg"
-        />
-      </View>
+    <View className="flex-1" style={{ backgroundColor: '#B4872A' }}>
+      <StatusBar barStyle="light-content" />
 
-      {/* Content */}
-      <View className="mx-5 mb-8 mt-8">
+      <ScrollView className="mt-5 flex-1 px-4 pt-12">
+        {/* Hero Image Card */}
+        <View className="mb-6 overflow-hidden rounded-3xl bg-white">
+          <Image
+            source={require('../../../assets/Frame 2147223550.png')}
+            style={{ width: '100%', height: 180 }}
+            resizeMode="cover"
+          />
+        </View>
+
         {/* Title */}
-        <Text className="mb-8 text-2xl font-bold text-white">Save Towards Your Goal</Text>
+        <Text className="mb-2 text-3xl font-bold text-white">
+          Save Towards{'\n'}Your Goal
+        </Text>
 
         {/* Benefits/Features Section */}
-        <View className="mb-8">
-          <Text className="mb-3 text-lg font-bold text-white">Benefits/Features</Text>
-          <View className="gap-2">
-            <View className="flex-row items-start gap-3">
-              <Text className="mt-1 text-lg text-white">•</Text>
-              <Text className="flex-1 text-sm text-white">Set a target amount deadline</Text>
-            </View>
-            <View className="flex-row items-start gap-3">
-              <Text className="mt-1 text-lg text-white">•</Text>
-              <Text className="flex-1 text-sm text-white">
-                Auto-Save options to reach your goal faster
-              </Text>
-            </View>
-            <View className="flex-row items-start gap-3">
-              <Text className="mt-1 text-lg text-white">•</Text>
-              <Text className="flex-1 text-sm text-white">Track Progress with visual goal bar</Text>
-            </View>
+        <View className="mb-6">
+          <Text className="mb-3 text-base font-bold text-yellow-300">Benefits/Features</Text>
+          <View className="space-y-2">
+            {[
+              'Set a target amount and deadline',
+              'Auto-Save options to reach your goal faster',
+              'Track progress with visual goal bar',
+            ].map((item) => (
+              <View key={item} className="flex-row items-start">
+                <Text className="mr-2 text-white">•</Text>
+                <Text className="flex-1 text-sm leading-6 text-white">{item}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
         {/* Interest/Rewards Section */}
         <View className="mb-8">
-          <Text className="mb-3 text-lg font-bold text-white">Interest/Rewards</Text>
-          <View className="gap-2">
-            <View className="flex-row items-start gap-3">
-              <Text className="mt-1 text-lg text-white">•</Text>
-              <Text className="flex-1 text-sm text-white">Interest 6% per month</Text>
-            </View>
-            <View className="flex-row items-start gap-3">
-              <Text className="mt-1 text-lg text-white">•</Text>
-              <Text className="flex-1 text-sm text-white">
-                Rewards: Extra points for reaching mile stone
-              </Text>
-            </View>
+          <Text className="mb-3 text-base font-bold text-yellow-300">Interest/Rewards</Text>
+          <View className="space-y-2">
+            {[
+              'Interest 6% per month',
+              'Rewards: Extra points for reaching milestones',
+            ].map((item) => (
+              <View key={item} className="flex-row items-start">
+                <Text className="mr-2 text-white">•</Text>
+                <Text className="flex-1 text-sm leading-6 text-white">{item}</Text>
+              </View>
+            ))}
           </View>
         </View>
-      </View>
+      </ScrollView>
 
-      {/* Start Saving Button */}
-      <View className="mx-5 mb-8">
+      {/* Bottom Buttons */}
+      <View className="gap-y-3 px-4 pb-8 pt-4">
+        <TouchBtn
+          onPress={() => navigateTo('rizeSpringsSavings', { productType: 'TARGET' })}
+          label="View Target Savings"
+          backgroundColor="transparent"
+          textColor="white"
+          borderColor="white"
+          borderWidth={1}
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
+
         <TouchBtn
           onPress={() => navigateTo('targetSaving')}
-          label="Start Saving"
+          label="Start Target Savings"
           backgroundColor="white"
-          textColor="#B45309" // amber-700 color
-          textClassName="font-bold text-lg"
-          buttonClassName="rounded-lg py-4 items-center"
+          textColor="#B4872A"
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
           containerClassName=""
         />
       </View>
-    </ScrollView>
+    </View>
   );
 }

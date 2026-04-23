@@ -1,17 +1,12 @@
-// screens/ChildSavingsInfo.jsx
+// screens/CompulsorySavingsInfo.jsx
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
+import { View, Text, ScrollView, Image, StatusBar } from 'react-native';
 import { navigateTo } from 'app/navigate';
 import TouchBtn from 'components/touchBtn';
 
-export default function ChildSavingsInfo() {
-  const handleStartSaving = () => {
-    console.log('Start Saving pressed');
-    navigateTo('childrenSavingForm');
-  };
-
+export default function CompulsorySavingsInfo() {
   return (
-    <View className="flex-1" style={{ backgroundColor: '#5C4033' }}>
+    <View className="flex-1" style={{ backgroundColor: '#513B56' }}>
       <StatusBar barStyle="light-content" />
 
       <ScrollView className="mt-5 flex-1 px-4 pt-12">
@@ -26,63 +21,63 @@ export default function ChildSavingsInfo() {
 
         {/* Title */}
         <Text className="mb-2 text-3xl font-bold text-white">
-          Save For Your Child's{'\n'}Future With Ease
+          Build Discipline,{'\n'}Grow Your Wealth
         </Text>
 
         {/* Benefits/Features Section */}
         <View className="mb-6">
-          <Text className="mb-3 text-base font-bold text-white">Benefits/Features</Text>
+          <Text className="mb-3 text-base font-bold text-yellow-300">Benefits/Features</Text>
           <View className="space-y-2">
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Save for school fees, education, or future need
-              </Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">Parent-controlled savings</Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Flexible contributions(one-time or reccurring)
-              </Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Earn interest while you save
-              </Text>
-            </View>
+            {[
+              'Mandatory savings plan that builds financial discipline',
+              'Funds locked until maturity for maximum benefit',
+              'Employer or self-directed contribution options',
+              'Earn interest on every kobo saved',
+            ].map((item) => (
+              <View key={item} className="flex-row items-start">
+                <Text className="mr-2 text-white">•</Text>
+                <Text className="flex-1 text-sm leading-6 text-white">{item}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
         {/* Interest/Rewards Section */}
         <View className="mb-8">
-          <Text className="mb-3 text-base font-bold text-white">Interest/Rewards</Text>
+          <Text className="mb-3 text-base font-bold text-yellow-300">Interest/Rewards</Text>
           <View className="space-y-2">
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">4% per month</Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="mr-2 text-white">•</Text>
-              <Text className="flex-1 text-sm leading-6 text-white">
-                Rewards: Earn points for consistent monthly savings
-              </Text>
-            </View>
+            {[
+              'Competitive interest rate on locked funds',
+              'Rewards: Earn bonus points for unbroken savings streaks',
+            ].map((item) => (
+              <View key={item} className="flex-row items-start">
+                <Text className="mr-2 text-white">•</Text>
+                <Text className="flex-1 text-sm leading-6 text-white">{item}</Text>
+              </View>
+            ))}
           </View>
         </View>
       </ScrollView>
 
-      {/* Start Saving Button - Fixed at bottom */}
-      <View className="px-4 pb-8 pt-4">
+      {/* Bottom Buttons */}
+      <View className="gap-y-3 px-4 pb-8 pt-4">
         <TouchBtn
-          onPress={handleStartSaving}
-          label="Start Saving"
+          onPress={() => navigateTo('rizeSpringsSavings', { productType: 'COMPULSORY' })}
+          label="View Compulsory Savings"
+          backgroundColor="transparent"
+          textColor="white"
+          borderColor="white"
+          borderWidth={1}
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
+
+        <TouchBtn
+          onPress={() => navigateTo('childrenSavingForm')}
+          label="Start Compulsory Savings"
           backgroundColor="white"
-          textColor="#5C4033" // brown color
+          textColor="#513B56"
           textClassName="text-base font-bold"
           buttonClassName="w-full items-center rounded-lg py-4"
           containerClassName=""

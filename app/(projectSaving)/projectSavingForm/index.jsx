@@ -1,157 +1,173 @@
-// screens/ProjectSavingsForm.jsx
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// screens/GroupSavingsForm.jsx
+import React from 'react';
+import { View, RefreshControl } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Header from 'components/header';
-import { navigateBack, navigateTo } from 'app/navigate';
+import { navigateBack } from 'app/navigate';
 import Dropdown from 'components/dropDown';
 import TouchBtn from 'components/touchBtn';
 import WalletBalanceCard from 'components/walletCard';
+import TextInputComponent from 'components/textInputs';
 import { Colors } from 'config/theme';
+import { GlobalStatusBar } from 'config/statusBar';
+import { ProductSummaryCard } from 'components/SavingsFormCards';
+import { useSavingsApplication } from 'components/useSavingsApplication';
 
-export default function ProjectSavingsForm() {
-  const [projectName, setProjectName] = useState('');
-  const [targetAmount, setTargetAmount] = useState('');
-  const [targetDate, setTargetDate] = useState('');
-  const [contributionFrequency, setContributionFrequency] = useState('');
-
-  const [showProjectNameDropdown, setShowProjectNameDropdown] = useState(false);
-  const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
-
-  const projectNameOptions = [
-    { label: 'Building', value: 'building' },
-    { label: 'Business', value: 'business' },
-    { label: 'Family', value: 'family' },
-    { label: 'Others', value: 'others' },
-  ];
-
-  const frequencyOptions = [
-    { label: 'Monthly', value: 'monthly' },
-    { label: 'Weekly', value: 'weekly' },
-    { label: 'Manual', value: 'manual' },
-  ];
-
-  const calculateSavingsMessage = () => {
-    if (!targetAmount || !contributionFrequency) return '';
-
-    const amount = parseFloat(targetAmount.replace(/,/g, ''));
-    if (isNaN(amount)) return '';
-
-    const frequency = frequencyOptions.find((f) => f.value === contributionFrequency)?.label || '';
-    return `₦${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} would be saved every ${frequency.toLowerCase()}`;
-  };
-
-  const handleContinue = () => {
-    console.log('Form submitted:', {
-      projectName,
-      targetAmount,
-      targetDate,
-      contributionFrequency,
-    });
-    navigateTo('projectSavings');
-  };
+export default function GroupSavingsForm() {
+  const {
+    amount,
+    description,
+    setDescription,
+    tenorDuration,
+    setTenorDuration,
+    savingAccountNumber,
+    setSavingAccountNumber,
+    showProductDropdown,
+    showTenorDropdown,
+    selectedProduct,
+    loadingProducts,
+    bookingSaving,
+    isBusy,
+    isRefetching,
+    refetch,
+    productOptions,
+    amountError,
+    handleAmountChange,
+    handleProductSelect,
+    handleToggleProductDropdown,
+    handleToggleTenorDropdown,
+    handleBookSaving,
+    interestRateOptions,
+  } = useSavingsApplication({ productType: 'GROUP' });
 
   return (
     <View className="flex-1 bg-white">
-      <ScrollView
+      <GlobalStatusBar style="dark-content" />
+      <KeyboardAwareScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}>
-        {/* Header */}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        extraScrollHeight={100}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[Colors?.primary]}
+            tintColor={Colors?.primary}
+          />
+        }>
         <Header
-          title="Project Savings"
-          showLeftIcon={true}
+          title="Group Savings Plan"
           onLeftPress={navigateBack}
+          showLeftIcon={true}
           color="black"
         />
+
         <WalletBalanceCard
-          walletName="Project Savings Wallet"
+          walletName="Group Savings Wallet"
           balance="₦0.00"
-          description="5% Interest Rate"
+          description={
+            selectedProduct
+              ? `${selectedProduct.interestRate}% Interest Rate`
+              : 'Select a product'
+          }
           backgroundImagePath={require('../../../assets/Vector .png')}
-          color="#D97706"
+          color="#157196"
           showWalletName={true}
           showBalance={true}
           showBalanceToggle={true}
           showDescription={true}
-          showDescriptionButton={true}
+          showDescriptionButton={false}
           showPoints={false}
           showWalletNumber={false}
           showCopyWallet={false}
           showTopRightButton={false}
           containerClassName="mx-5 mb-8"
         />
-        {/* Wallet Card */}
+
         <View className="flex-1 px-5">
-          {/* Project Name Dropdown */}
           <Dropdown
-            label="Project Name"
-            placeholder="Select what you're saving for"
-            value={projectName}
-            options={projectNameOptions}
-            onSelect={(value) => {
-              setProjectName(value);
-              setShowProjectNameDropdown(false);
-            }}
-            isOpen={showProjectNameDropdown}
-            onToggle={() => setShowProjectNameDropdown(!showProjectNameDropdown)}
+            label="Savings Product"
+            placeholder={loadingProducts ? 'Loading...' : 'Select a group savings product'}
+            value={selectedProduct ? String(selectedProduct.id) : ''}
+            options={loadingProducts ? [] : productOptions}
+            onSelect={handleProductSelect}
+            isOpen={showProductDropdown && !isBusy}
+            onToggle={handleToggleProductDropdown}
+            isLoading={isBusy}
+            search
           />
 
-          {/* Target Amount */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Target Amount</Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={targetAmount}
-              onChangeText={setTargetAmount}
-              placeholder="₦0.00"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="decimal-pad"
-            />
-          </View>
+          <ProductSummaryCard product={selectedProduct} />
 
-          {/* Target Date */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Target Date</Text>
-            <TouchableOpacity className="flex-row items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
-              <Text className="flex-1 text-base text-gray-400">Select date</Text>
-              <Ionicons name="calendar-outline" size={20} color={Colors?.primary} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Contribution Frequency Dropdown */}
-          <Dropdown
-            label="Contribution Frequency"
-            placeholder="How will you save"
-            value={contributionFrequency}
-            options={frequencyOptions}
-            onSelect={(value) => {
-              setContributionFrequency(value);
-              setShowFrequencyDropdown(false);
-            }}
-            isOpen={showFrequencyDropdown}
-            onToggle={() => setShowFrequencyDropdown(!showFrequencyDropdown)}
+          <TextInputComponent
+            label="Amount"
+            value={amount}
+            onChangeText={handleAmountChange}
+            placeholder="₦0.00"
+            keyboardType="decimal-pad"
+            error={amountError}
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 16, marginTop: 12 }}
           />
 
-          {/* Savings Calculation Message */}
-          {calculateSavingsMessage() && (
-            <View className="mb-6 rounded-lg bg-blue-50 p-3">
-              <Text className="text-sm text-blue-700">{calculateSavingsMessage()}</Text>
-            </View>
-          )}
+          <TextInputComponent
+            label="Description"
+            value={description}
+            onChangeText={setDescription}
+            placeholder="e.g. Group savings for land purchase"
+            returnKeyType="done"
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 16 }}
+          />
+
+          <Dropdown
+            label="Tenor / Duration"
+            placeholder={selectedProduct ? 'Select duration' : 'Select a product first'}
+            value={tenorDuration}
+            options={interestRateOptions}
+            onSelect={setTenorDuration}
+            isOpen={showTenorDropdown && !isBusy}
+            onToggle={handleToggleTenorDropdown}
+            isLoading={isBusy}
+            style={{ marginTop: 10 }}
+          />
+
+          <TextInputComponent
+            label="Interest Rate"
+            value={selectedProduct ? `${selectedProduct.interestRate}%` : '—'}
+            editable={false}
+            isLoading={isBusy}
+            inputStyle={{ backgroundColor: '#F3F4F6' }}
+            containerStyle={{ marginBottom: 16, marginTop: 20 }}
+          />
+
+          <TextInputComponent
+            label="Saving Account Number"
+            value={savingAccountNumber}
+            onChangeText={setSavingAccountNumber}
+            placeholder="Enter account number"
+            keyboardType="number-pad"
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 32 }}
+          />
         </View>
-        {/* Continue Button */}
+
         <View className="px-5 pb-6">
           <TouchBtn
-            onPress={handleContinue}
+            onPress={handleBookSaving}
             label="Continue"
+            isLoading={bookingSaving}
+            loadingText="Booking..."
             textClassName="text-base font-semibold"
             buttonClassName="items-center rounded-lg py-4"
             activeOpacity={0.8}
             containerClassName=""
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

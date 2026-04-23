@@ -68,13 +68,25 @@ export default function ProjectSavingsInfo() {
         </View>
       </ScrollView>
 
-      {/* Create Plan Button - Fixed at bottom */}
-      <View className="px-4 pb-8 pt-4">
+      {/* Buttons - Fixed at bottom */}
+      <View className="gap-y-3 px-4 pb-8 pt-4">
+        <TouchBtn
+          onPress={() => navigateTo('rizeSpringsSavings', { productType: 'GROUP' })}
+          label="View Group Savings"
+          backgroundColor="transparent"
+          textColor="white"
+          borderColor="white"
+          borderWidth={1}
+          textClassName="text-base font-bold"
+          buttonClassName="w-full items-center rounded-lg py-4"
+          containerClassName=""
+        />
+
         <TouchBtn
           onPress={handleCreatePlan}
           label="Create Plan"
           backgroundColor="white"
-          textColor="#D97706" // amber-600 color
+          textColor="#D97706"
           textClassName="text-base font-bold"
           buttonClassName="w-full items-center rounded-lg py-4"
           containerClassName=""

@@ -24,3 +24,4 @@ STORED QUERY KEYS
 "dashboard"
 "loanProducts"
 "myLoans"
+"savingProducts"

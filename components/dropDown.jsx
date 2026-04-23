@@ -1,6 +1,6 @@
 // components/Dropdown.jsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const defaultTriggerStyle = {
@@ -93,12 +93,14 @@ export default function Dropdown({
         <TouchableOpacity
           activeOpacity={1}
           onPress={onToggle}
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            paddingHorizontal: 16,
-          }}>
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              paddingHorizontal: 16,
+            },
+          ]}>
           <TouchableOpacity
             activeOpacity={1}
             style={{

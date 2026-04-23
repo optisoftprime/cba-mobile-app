@@ -1,62 +1,91 @@
-// screens/ChildSavingsForm.jsx
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+// screens/CompulsorySavingsForm.jsx
+import React from 'react';
+import { View, RefreshControl } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Header from 'components/header';
-import { navigateBack, navigateTo } from 'app/navigate';
+import { navigateBack } from 'app/navigate';
 import Dropdown from 'components/dropDown';
 import TouchBtn from 'components/touchBtn';
-import { Colors } from 'config/theme';
 import WalletBalanceCard from 'components/walletCard';
+import TextInputComponent from 'components/textInputs';
+import { Colors } from 'config/theme';
+import { GlobalStatusBar } from 'config/statusBar';
+import { ProductSummaryCard, SavingsInfoCard } from '../../../components/SavingsFormCards';
+import { useSavingsApplication } from '../../../components/useSavingsApplication';
 
-export default function ChildSavingsForm() {
-  const [childName, setChildName] = useState('');
-  const [targetAmount, setTargetAmount] = useState('');
-  const [frequency, setFrequency] = useState('');
-  const [startDate, setStartDate] = useState('');
-
-  const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
-
-  const frequencyOptions = [
-    { label: 'One Time', value: 'one_time' },
-    { label: 'Daily', value: 'daily' },
-    { label: 'Weekly', value: 'weekly' },
-    { label: 'Monthly', value: 'monthly' },
-  ];
-
-  const handleContinue = () => {
-    console.log('Child Savings Form Submitted:', {
-      childName,
-      targetAmount,
-      frequency,
-      startDate,
-    });
-    navigateTo('childrenSavings');
-  };
+export default function CompulsorySavingsForm() {
+  const {
+    amount,
+    description,
+    setDescription,
+    transactionMode,
+    setTransactionMode,
+    tenorDuration,
+    setTenorDuration,
+    savingAccountNumber,
+    setSavingAccountNumber,
+    showProductDropdown,
+    showTransactionModeDropdown,
+    showTenorDropdown,
+    selectedProduct,
+    loadingProducts,
+    bookingSaving,
+    isBusy,
+    isRefetching,
+    refetch,
+    productOptions,
+    transactionModeOptions,
+    tenorOptions,
+    amountError,
+    handleAmountChange,
+    handleProductSelect,
+    handleToggleProductDropdown,
+    handleToggleTransactionModeDropdown,
+    handleToggleTenorDropdown,
+    handleBookSaving,
+    interestRateOptions
+  } = useSavingsApplication('COMPULSORY');
 
   return (
     <View className="flex-1 bg-white">
-      <ScrollView
+      <GlobalStatusBar style="dark-content" />
+      <KeyboardAwareScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        extraScrollHeight={100}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[Colors?.primary]}
+            tintColor={Colors?.primary}
+          />
+        }>
         <Header
-          title="Children Savings"
+          title="Compulsory Savings"
           onLeftPress={navigateBack}
           showLeftIcon={true}
           color="black"
         />
 
         <WalletBalanceCard
-          walletName="Children Savings Wallet"
+          walletName="Compulsory Savings Wallet"
           balance="₦0.00"
-          description="5% Interest Rate"
+          description={
+            selectedProduct
+              ? `${selectedProduct.interestRate}% Interest Rate`
+              : 'Select a product'
+          }
           backgroundImagePath={require('../../../assets/Vector .png')}
-          color="#5C4033"
+          color="#513B56"
           showWalletName={true}
           showBalance={true}
           showBalanceToggle={true}
           showDescription={true}
-          showDescriptionButton={true}
+          showDescriptionButton={false}
           showPoints={false}
           showWalletNumber={false}
           showCopyWallet={false}
@@ -64,82 +93,87 @@ export default function ChildSavingsForm() {
           containerClassName="mx-5 mb-8"
         />
 
-        {/* Form Content */}
         <View className="flex-1 px-5">
-          {/* Child Name Input */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Child Name</Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={childName}
-              onChangeText={setChildName}
-              placeholder="Enter child name"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          {/* Target Amount Input */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">Target Amount</Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={targetAmount}
-              onChangeText={setTargetAmount}
-              placeholder="₦0.00"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="decimal-pad"
-            />
-          </View>
-
-          {/* Frequency Dropdown */}
           <Dropdown
-            label="Frequency"
-            placeholder="₦0.00"
-            value={frequency}
-            options={frequencyOptions}
-            onSelect={(value) => {
-              setFrequency(value);
-              setShowFrequencyDropdown(false);
-            }}
-            isOpen={showFrequencyDropdown}
-            onToggle={() => setShowFrequencyDropdown(!showFrequencyDropdown)}
+            label="Savings Product"
+            placeholder={loadingProducts ? 'Loading...' : 'Select a savings product'}
+            value={selectedProduct ? String(selectedProduct.id) : ''}
+            options={loadingProducts ? [] : productOptions}
+            onSelect={handleProductSelect}
+            isOpen={showProductDropdown && !isBusy}
+            onToggle={handleToggleProductDropdown}
+            isLoading={isBusy}
+            search
           />
 
-          {/* Start Date Input */}
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-semibold text-gray-900">
-              Start Date <Text className="font-normal text-gray-600">(Optional)</Text>
-            </Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900"
-              value={startDate}
-              onChangeText={setStartDate}
-              placeholder="Select date"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
+          <ProductSummaryCard product={selectedProduct} />
 
-          {/* Info Box */}
-          <View className="mb-8 rounded-lg p-4" style={{ backgroundColor: Colors?.fade }}>
-            <Text className="mb-2 font-semibold text-gray-900">Info:</Text>
-            <Text className="text-sm text-gray-700">
-              • 4% interest monthly and bonus points for consistent savings
-            </Text>
-          </View>
+          <TextInputComponent
+            label="Amount"
+            value={amount}
+            onChangeText={handleAmountChange}
+            placeholder="₦0.00"
+            keyboardType="decimal-pad"
+            error={amountError}
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 16, marginTop: 12 }}
+          />
+
+          <TextInputComponent
+            label="Description"
+            value={description}
+            onChangeText={setDescription}
+            placeholder="e.g. Saving for a new car"
+            returnKeyType="done"
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 16 }}
+          />
+
+          <Dropdown
+            label="Tenor / Duration"
+            placeholder={selectedProduct ? 'Select duration' : 'Select a product first'}
+            value={tenorDuration}
+            options={interestRateOptions}
+            onSelect={setTenorDuration}
+            isOpen={showTenorDropdown && !isBusy}
+            onToggle={handleToggleTenorDropdown}
+            isLoading={isBusy}
+            style={{ marginTop: 10 }}
+          />
+
+          <TextInputComponent
+            label="Interest Rate"
+            value={selectedProduct ? `${selectedProduct.interestRate}%` : '—'}
+            editable={false}
+            isLoading={isBusy}
+            inputStyle={{ backgroundColor: '#F3F4F6' }}
+            containerStyle={{ marginBottom: 16, marginTop: 20 }}
+          />
+
+          <TextInputComponent
+            label="Saving Account Number"
+            value={savingAccountNumber}
+            onChangeText={setSavingAccountNumber}
+            placeholder="Enter account number"
+            keyboardType="number-pad"
+            isLoading={isBusy}
+            containerStyle={{ marginBottom: 32 }}
+          />
         </View>
 
-        {/* Continue Button - Fixed at Bottom */}
         <View className="px-5 pb-6">
           <TouchBtn
-            onPress={handleContinue}
+            onPress={handleBookSaving}
             label="Continue"
-            textClassName="text-base font-semibold text-white"
+            isLoading={bookingSaving}
+            loadingText="Booking..."
+            textClassName="text-base font-semibold"
             buttonClassName="items-center rounded-lg py-4"
             activeOpacity={0.8}
             containerClassName=""
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

@@ -1,79 +1,259 @@
 // screens/RizeSpringList.jsx
-import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  RefreshControl,
+  TextInput,
+} from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 import Header from 'components/header';
-import { navigateBack, navigateTo } from 'app/navigate';
+import { useLocalSearchParams } from 'expo-router';
+import { navigateBack, navigateReplace } from 'app/navigate';
 import WalletBalanceCard from 'components/walletCard';
+import EmptyState from 'components/EmptyState';
+import Dropdown from 'components/dropDown';
 import { Colors } from 'config/theme';
-import { fetchAllSavingProducts } from 'api/save';
+import { getUserSavingTransactions } from 'api/save';
+import { formatAmount, formatDate } from 'helper';
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const FALLBACK_IMAGE = require('../../../assets/Frame 427320095.png');
+
+// These map to the productType query param the backend accepts
+const PRODUCT_TYPE_OPTIONS = [
+  { label: 'All', value: 'All' },
+  { label: 'Fixed', value: 'FIXED' },
+  { label: 'Target', value: 'TARGET' },
+  { label: 'Group', value: 'GROUP' },
+  { label: 'Compulsory', value: 'COMPULSORY' },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const getStatusConfig = (status) => {
+  const s = (status ?? '').toLowerCase();
+  if (s === 'approved')
+    return { color: '#16A34A', bgColor: '#DCFCE7', icon: 'checkmark-circle-outline', label: 'Approved' };
+  if (s === 'pending')
+    return { color: '#D97706', bgColor: '#FEF3C7', icon: 'time-outline', label: 'Pending' };
+  if (s === 'declined' || s === 'rejected')
+    return { color: '#DC2626', bgColor: '#FEE2E2', icon: 'close-circle-outline', label: 'Declined' };
+  return { color: '#6B7280', bgColor: '#F3F4F6', icon: 'ellipse-outline', label: status ?? '—' };
+};
+
+// ─── Custom debounce hook ─────────────────────────────────────────────────────
+
+function useDebounce(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
+// ─── SavingCard ───────────────────────────────────────────────────────────────
+
+function SavingCard({ item, onViewDetails }) {
+  const config = getStatusConfig(item.approvalStatus);
+
+  return (
+    <View className="mb-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm">
+      <View className="flex-row">
+        <View className="mr-4 h-28 w-28 items-center justify-center overflow-hidden rounded-xl bg-gray-100">
+          <Image
+            source={item.savingProductRes?.imageUrl ? { uri: item.savingProductRes.imageUrl } : FALLBACK_IMAGE}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        </View>
+
+        <View className="flex-1">
+          <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
+            <Text className="font-semibold">Product: </Text>
+            {item.savingProductRes?.productName ?? '—'}
+          </Text>
+          <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
+            <Text className="font-semibold">Amount: </Text>
+            {formatAmount(item.amount)}
+          </Text>
+          <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
+            <Text className="font-semibold">Type: </Text>
+            {item.transactionType ?? '—'}
+          </Text>
+          {item.tenure != null && (
+            <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
+              <Text className="font-semibold">Tenure: </Text>
+              {item.tenure} months
+            </Text>
+          )}
+          <Text className="mb-1 text-xs" style={{ color: Colors?.primary }}>
+            <Text className="font-semibold">Date: </Text>
+            {formatDate(item.localDateCreatedAt)}
+          </Text>
+          <Text className="mb-3 text-xs" style={{ color: Colors?.primary }}>
+            <Text className="font-semibold">Status: </Text>
+            <Text style={{ color: config.color, fontWeight: '600' }}>{config.label}</Text>
+          </Text>
+
+          <TouchableOpacity
+            onPress={() => onViewDetails?.(item)}
+            className="flex-row items-center justify-center rounded-lg py-2"
+            style={{ backgroundColor: Colors?.primary, gap: 4 }}>
+            <Ionicons name="document-text-outline" size={14} color="#fff" />
+            <Text className="text-xs font-semibold text-white">View Details</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ─── Toolbar ──────────────────────────────────────────────────────────────────
+
+function Toolbar({ onCreatePlan, filterLabel, onOpenFilter, searchValue, onSearchChange }) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const inputRef = useRef(null);
+
+  const openSearch = () => {
+    setSearchOpen(true);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    onSearchChange('');
+  };
+
+  if (searchOpen) {
+    return (
+      <View
+        className="mb-6 flex-row items-center"
+        style={{
+          borderWidth: 1,
+          borderColor: Colors?.primary,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          backgroundColor: '#fff',
+          gap: 8,
+        }}>
+        <Ionicons name="search-outline" size={16} color="#9CA3AF" />
+        <TextInput
+          ref={inputRef}
+          value={searchValue}
+          onChangeText={onSearchChange}
+          placeholder="Search by product name..."
+          placeholderTextColor="#9CA3AF"
+          style={{ flex: 1, fontSize: 13, color: '#111827' }}
+          returnKeyType="search"
+        />
+        <TouchableOpacity onPress={closeSearch}>
+          <Ionicons name="close-outline" size={20} color={Colors?.primary} />
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View className="mb-6 flex-row items-center justify-between">
+      <TouchableOpacity onPress={onCreatePlan} className="items-center py-3">
+        <Text className="text-sm font-semibold" style={{ color: Colors?.primary }}>
+          Create New Savings Plan
+        </Text>
+      </TouchableOpacity>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <TouchableOpacity onPress={openSearch} style={{ padding: 4 }}>
+          <Ionicons name="search-outline" size={20} color={Colors?.primary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onOpenFilter}
+          className="flex-row items-center gap-1 rounded-lg border px-3 py-2"
+          style={{ borderColor: Colors?.primary }}>
+          <Text className="text-xs font-semibold" style={{ color: Colors?.primary }}>
+            {filterLabel}
+          </Text>
+          <Text className="text-xs" style={{ color: Colors?.primary }}>▾</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function RizeSpringList() {
-  const savingsPlans = [
-    {
-      id: 1,
-      totalSaved: '₦100,000',
-      estimatedSavings: '₦250,000',
-      frequency: '12/09/2026',
-      nextSave: 'Today, 12:00PM',
-      status: 'Active',
-      progress: 65,
-    },
-    {
-      id: 2,
-      totalSaved: '₦100,000',
-      estimatedSavings: '₦250,000',
-      frequency: '12/09/2026',
-      nextSave: 'Today, 12:00PM',
-      status: 'Active',
-      progress: 65,
-    },
-    {
-      id: 3,
-      totalSaved: '₦100,000',
-      estimatedSavings: '₦250,000',
-      frequency: '12/09/2026',
-      nextSave: 'Today, 12:00PM',
-      status: 'Active',
-      progress: 65,
-    },
-  ];
+  const { productType: initialProductType = null } = useLocalSearchParams();
 
-  const handleWithdraw = () => {
-    console.log('Withdraw pressed');
-  };
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterValue, setFilterValue] = useState(initialProductType ?? 'All');
+  const [searchInput, setSearchInput] = useState('');
 
-  const handleCreateNewPlan = () => {
-    console.log('Create New Savings Plan pressed');
-    navigateTo('rizeSpringData');
-  };
+  const debouncedSearch = useDebounce(searchInput, 400);
 
-  const handleViewDetails = (planId) => {
-    // console.log('View details for plan:', planId);
-    // navigateTo('rizeSpringDetails', { id: planId });
-  };
+  const selectedFilterLabel = PRODUCT_TYPE_OPTIONS.find((o) => o.value === filterValue)?.label ?? 'All';
 
+  // ── Build query params ──────────────────────────────────────────────────────
+  // Only productName and productType are accepted by the backend
+  const buildParams = useCallback(() => {
+    const params = {};
+    if (debouncedSearch.trim()) params.productName = debouncedSearch.trim();
+    if (filterValue !== 'All') params.productType = filterValue;
+    return params;
+  }, [debouncedSearch, filterValue]);
 
-  useEffect(() => {
-    async function getStuff() {
-      const response = await fetchAllSavingProducts()
+  const {
+    data: savings = [],
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ['userSavingTransactions', debouncedSearch, filterValue],
+    queryFn: async () => {
+      const response = await getUserSavingTransactions(buildParams());
       console.log(JSON.stringify(response, null, 2));
-    }
+      if (response?.ok && response?.data?.data) return response.data.data;
+      Toast.show({ type: 'error', text1: 'Failed to load savings', text2: response?.message });
+      return [];
+    },
+    staleTime: 0,
+  });
 
-    getStuff()
-  }, [])
+  const handleWithdraw = () => console.log('Withdraw pressed');
+  const handleCreateNewPlan = () => navigateReplace('rizeSpringSavingForm');
+  const handleViewDetails = (item) => console.log('View details:', JSON.stringify(item, null, 2));
 
   return (
     <View className="flex-1 bg-gray-50">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[Colors?.primary]}
+            tintColor={Colors?.primary}
+          />
+        }>
         <Header
-          title="RizeSpring Savings"
+          title="Saving Transactions"
           onLeftPress={navigateBack}
           showLeftIcon={true}
           color="black"
         />
+
         <WalletBalanceCard
           walletName="Rize Spring Savings Wallet"
           balance="₦0.00"
@@ -96,73 +276,52 @@ export default function RizeSpringList() {
         />
 
         <View className="px-4">
-          {/* Wallet Card with Withdraw Button */}
 
-          {/* Create New Savings Plan Button */}
-          <TouchableOpacity onPress={handleCreateNewPlan} className="mb-6 items-center py-3">
-            <Text className="text-sm font-semibold " style={{ color: Colors?.primary }}>
-              Create New Savings Plan
-            </Text>
-          </TouchableOpacity>
+          {/* Hidden dropdown — triggered by Toolbar filter button */}
+          <Dropdown
+            label="Filter by Type"
+            placeholder="All"
+            value={filterValue}
+            options={PRODUCT_TYPE_OPTIONS}
+            onSelect={(val) => setFilterValue(val)}
+            isOpen={filterOpen}
+            onToggle={() => setFilterOpen((prev) => !prev)}
+            search={false}
+            hideTrigger
+          />
 
-          {/* Savings Plans List */}
-          {savingsPlans.map((plan) => (
-            <View key={plan.id} className="mb-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm">
-              <View className="flex-row">
-                {/* Phone Image/Icon */}
-                <View className="mr-4 h-28 w-28 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-purple-500">
-                  <Image
-                    source={require('../../../assets/Frame 427320095.png')}
-                    style={{ width: 80, height: 80 }}
-                    resizeMode="contain"
-                  />
-                </View>
+          <Toolbar
+            onCreatePlan={handleCreateNewPlan}
+            filterLabel={selectedFilterLabel}
+            onOpenFilter={() => setFilterOpen(true)}
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+          />
 
-                {/* Plan Details */}
-                <View className="flex-1">
-                  <Text className="mb-1 text-xs text-gray-600">
-                    <Text className="font-semibold">Total Saved: </Text>
-                    {plan.totalSaved}
-                  </Text>
-                  <Text className="mb-1 text-xs text-gray-600">
-                    <Text className="font-semibold">Estimated Savings Amount: </Text>
-                    {plan.estimatedSavings}
-                  </Text>
-                  <Text className="mb-1 text-xs text-gray-600">
-                    <Text className="font-semibold">Frequency: </Text>
-                    {plan.frequency}
-                  </Text>
-                  <Text className="mb-1 text-xs text-gray-600">
-                    <Text className="font-semibold">Next Save: </Text>
-                    {plan.nextSave}
-                  </Text>
-                  <Text className="mb-2 text-xs text-gray-600">
-                    <Text className="font-semibold">Status: </Text>
-                    <Text className="text-green-600">{plan.status}</Text>
-                  </Text>
-
-                  {/* Progress Bar */}
-                  <View className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200">
-                    <View
-                      className="h-full bg-[#157196]"
-                      style={{ width: `${plan.progress}%`, backgroundColor: Colors?.primary }}
-                    />
-                  </View>
-                  <Text className="mb-2 text-right text-xs font-semibold text-gray-700">
-                    {plan.progress}%
-                  </Text>
-
-                  {/* View Details Button */}
-                  <TouchableOpacity
-                    onPress={() => handleViewDetails(plan.id)}
-                    className="items-center rounded-lg py-2"
-                    style={{ backgroundColor: Colors?.primary }}>
-                    <Text className="text-xs font-semibold text-white">View Savings Details</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          ))}
+          {/* List */}
+          {isLoading ? (
+            <EmptyState
+              title="Loading your savings..."
+              subtitle="Please wait a moment"
+              iconName="time-outline"
+            />
+          ) : savings.length === 0 ? (
+            <EmptyState
+              title="No savings found"
+              subtitle={
+                debouncedSearch.trim()
+                  ? `No results for "${debouncedSearch.trim()}".`
+                  : filterValue !== 'All'
+                    ? `No ${selectedFilterLabel.toLowerCase()} savings found.`
+                    : "You haven't created any savings plan yet."
+              }
+              iconName="wallet-outline"
+            />
+          ) : (
+            savings.map((item) => (
+              <SavingCard key={item.id} item={item} onViewDetails={handleViewDetails} />
+            ))
+          )}
         </View>
       </ScrollView>
     </View>
