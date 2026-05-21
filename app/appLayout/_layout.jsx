@@ -42,11 +42,12 @@ export default function TabLayout() {
           backgroundColor: 'white',
           height: Platform.OS === 'ios' ? 80 : 64,
           paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-          paddingTop: 8,
+          paddingTop: 5,
           elevation: 10,
           shadowColor: '#000',
           shadowOpacity: 0.06,
           shadowRadius: 10,
+
         },
         tabBarActiveTintColor: Colors?.primary || '#0E7490',
         tabBarInactiveTintColor: '#9CA3AF',

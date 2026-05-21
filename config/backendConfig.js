@@ -38,4 +38,16 @@ export const routes = {
   bookSavingProduct: '/api/v1/saving-product-booking',
   allSavingProducts: '/api/v1/saving-product-booking/all-saving-products',
   userSavingTransactions: '/api/v1/saving-product-booking/user-saving-transactions',
+
+  // User Profile
+  createSupportTicket: '/api/v1/user-profile/create-support-ticket',
+  deactivateUser: '/api/v1/user-profile/deactivate-user',
+  fetchNotificationPreferences: '/api/v1/user-profile/fetch-notification-preferences',
+  fetchUserDetails: '/api/v1/user-profile/fetch-user-details',
+  logout: '/api/v1/user-profile/logout',
+  updateUserNotificationPreferences: '/api/v1/user-profile/update-user-notification-preferences',
+
+  // KYC
+fetchAllKycTiers: '/api/v1/kyc-management/fetch-all-kyc-tiers',
+kycUpgradeRequest: '/api/v1/kyc-management/kyc-upgrade-request',
 };

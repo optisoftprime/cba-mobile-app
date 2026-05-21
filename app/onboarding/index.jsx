@@ -50,7 +50,7 @@ export default function OnboardingWelcome() {
 
       {/* Floating App Logo */}
       <View className="absolute left-4 top-20 z-10">
-        <OnboardingAppLogo />
+        <OnboardingAppLogo  />
       </View>
 
       {/* Animated Content */}

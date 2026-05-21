@@ -1,4 +1,6 @@
-import React from 'react';
+// the user tirer is noe part of the response in the fetch user rprofile
+// screens/HomePage.jsx
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,12 +14,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import WalletBalanceCard from 'components/walletCard';
-import { navigateBack, navigateReplace, navigateTo } from 'app/navigate';
+import { navigateReplace, navigateTo } from 'app/navigate';
 import Toast from 'react-native-toast-message';
 import { trimMessage } from 'helper';
 import { getDashBoardData } from 'api/home';
-import { save } from 'config/storage';
+import { fetchUserDetails } from 'api/userProfile';
+import { updateUser } from 'config/storage';
+import HomeWalletCard from 'components/homeWalletCard';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -68,15 +71,7 @@ function groupTransactionsByDate(transactions) {
 function Skeleton({ width, height, radius = 6, style }) {
   return (
     <View
-      style={[
-        {
-          width,
-          height,
-          borderRadius: radius,
-          backgroundColor: '#E5E7EB',
-        },
-        style,
-      ]}
+      style={[{ width, height, borderRadius: radius, backgroundColor: '#E5E7EB' }, style]}
     />
   );
 }
@@ -161,12 +156,7 @@ function TransactionItem({ tx }) {
         <Text style={{ fontSize: 14, fontWeight: '700', color: '#1F2937' }}>
           {formatAmount(tx.amount)}
         </Text>
-        <Text
-          style={{
-            marginTop: 2,
-            fontSize: 12,
-            color: isSuccessful ? '#059669' : '#D97706',
-          }}>
+        <Text style={{ marginTop: 2, fontSize: 12, color: isSuccessful ? '#059669' : '#D97706' }}>
           {tx.status}
         </Text>
       </View>
@@ -223,32 +213,62 @@ export default function HomePage() {
     }, [])
   );
 
+  // ── User details — runs in background, never blocks the UI ──────────────────
+  const { data: userDetails } = useQuery({
+    queryKey: ['userDetails'],
+    queryFn: async () => {
+      const result = await fetchUserDetails();
+      if (!result.ok) throw new Error(result.message);
+      const profile = result.data.data;
+      // merge into persisted storage so other screens can read it offline
+      await updateUser({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        middleName: profile.middleName,
+        mobilePhone: profile.mobilePhone,
+        gender: profile.gender,
+        dateOfBirth: profile.dateOfBirth,
+        address: profile.addressDto,
+      });
+      return profile;
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  // ── Dashboard ────────────────────────────────────────────────────────────────
   const {
     data: dashData,
     isLoading,
     isRefetching,
-    refetch,
   } = useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
       const response = await getDashBoardData();
       const data = response?.data?.data;
-      console.log(data)
 
       if (!data || !data?.accountName || !data?.transactionHistory) {
-        Toast.show({ type: 'error', text1: 'An Error Occurred', text2: 'Account Not Found' });
-        navigateReplace("landingScreen");
-        return null;
-      } else {
-        await save('user', data);
+        throw new Error('Incomplete account data received');
       }
 
-      // await save('user', data);
+      // persist dashboard fields without overwriting user profile fields
+      await updateUser({
+        accountName: data.accountName,
+        accountNumber: data.accountNumber,
+        walletBalance: data.walletBalance,
+      });
 
       return data;
     },
-    staleTime: 0,
+    staleTime: Infinity,
+    placeholderData: (previousData) => previousData,
+    retry: false,
     onError: (error) => {
+      const cached = queryClient.getQueryData(['dashboard']);
+      if (!cached) {
+        Toast.show({ type: 'error', text1: 'An Error Occurred', text2: 'Account Not Found' });
+        navigateReplace('landingScreen');
+        return;
+      }
       Toast.show({
         type: 'error',
         text1: 'An Error Occurred',
@@ -262,54 +282,24 @@ export default function HomePage() {
     ? groupTransactionsByDate(limitedTransactions)
     : null;
 
+  // derive display name: prefer fresh user profile, fall back to dashboard accountName
+  const firstName =
+    userDetails?.firstName ??
+    dashData?.accountName?.split(' ')[0] ??
+    'there';
+
   const services = [
-    {
-      name: 'Transfer',
-      icon: 'swap-horizontal',
-      color: '#FCE7F3',
-      iconColor: '#BE185D',
-      link: 'transferType',
-    },
+    { name: 'Transfer', icon: 'swap-horizontal', color: '#FCE7F3', iconColor: '#BE185D', link: 'transferType' },
     { name: 'Savings', icon: 'wallet', color: '#FEF3C7', iconColor: '#D97706', link: 'save' },
-    {
-      name: 'RizeCopp',
-      icon: 'chatbubbles',
-      color: '#CFFAFE',
-      iconColor: '#0891B2',
-      link: 'rizeCoopOptions',
-    },
+    { name: 'RizeCopp', icon: 'chatbubbles', color: '#CFFAFE', iconColor: '#0891B2', link: 'rizeCoopOptions' },
     { name: 'Loan', icon: 'home', color: '#D9F99D', iconColor: '#65A30D', link: 'loanData' },
-    {
-      name: 'Self Service',
-      icon: 'card',
-      color: '#E9D5FF',
-      iconColor: '#7C3AED',
-      link: 'securitySetting',
-    },
-    {
-      name: 'Utilities',
-      icon: 'stats-chart',
-      color: '#DBEAFE',
-      iconColor: '#2563EB',
-      link: 'utilitiesOptions',
-    },
+    { name: 'Self Service', icon: 'card', color: '#E9D5FF', iconColor: '#7C3AED', link: 'securitySetting' },
+    { name: 'Utilities', icon: 'stats-chart', color: '#DBEAFE', iconColor: '#2563EB', link: 'utilitiesOptions' },
   ];
 
   const goodies = [
-    {
-      title: 'Refer & Earn',
-      points: '3,450 points',
-      color: '#A16207',
-      bgColor: '#CA8A04',
-      link: 'referal',
-    },
-    {
-      title: 'Cashback',
-      amount: '₦0.00',
-      subtitle: 'This Month Cashback',
-      color: '#B91C1C',
-      bgColor: '#DC2626',
-    },
+    { title: 'Rewards', points: '3,450 points', color: '#A16207', bgColor: '#CA8A04', link: 'referal' },
+    { title: 'Referrals', amount: '₦0.00', subtitle: 'Refer and earn', color: '#B91C1C', bgColor: '#DC2626' },
   ];
 
   return (
@@ -321,12 +311,13 @@ export default function HomePage() {
           refreshing={isRefetching}
           onRefresh={() => {
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-            refetch();
+            queryClient.invalidateQueries({ queryKey: ['userDetails'] });
           }}
           tintColor="#0E7490"
           colors={['#0E7490']}
         />
       }>
+
       {/* ── Header ── */}
       <View className="bg-white px-5 pb-4 pt-12">
         <View className="flex-row items-center justify-between">
@@ -339,7 +330,7 @@ export default function HomePage() {
               <Skeleton width={130} height={16} />
             ) : (
               <Text className="text-base font-semibold text-gray-800">
-                Hello {dashData?.accountName?.split(' ')[0] ?? 'there'} 👋
+                Hello {firstName} 👋
               </Text>
             )}
           </View>
@@ -350,7 +341,7 @@ export default function HomePage() {
       </View>
 
       {/* ── Wallet Balance Card ── */}
-      <WalletBalanceCard
+      <HomeWalletCard
         balance={
           isLoading
             ? '₦ --'
@@ -359,16 +350,9 @@ export default function HomePage() {
               : '₦ 0.00'
         }
         points="3,145 Points"
-        walletNumber={isLoading ? '----------' : (dashData?.accountNumber ?? '----------')}
-        showWalletName={true}
-        showBalance={true}
-        showBalanceToggle={true}
-        showDescription={false}
-        showPoints={true}
-        showWalletNumber={true}
-        showCopyWallet={true}
-        showTopRightButton={false}
-        containerClassName="px-5 py-4"
+        accountNumber={isLoading ? '----------' : (dashData?.accountNumber ?? '----------')}
+        accountTier="Tier 1 Account"
+        onUpgradePress={() => navigateTo('upgradeAccount')}
       />
 
       {/* ── Over View ── */}
@@ -408,7 +392,7 @@ export default function HomePage() {
               {index === 0 && (
                 <TouchableOpacity className="mt-2 self-start rounded-full bg-white px-3 py-1">
                   <Text className="text-xs font-medium" style={{ color: goodie.color }}>
-                    Join Us
+                    Gold Tier
                   </Text>
                 </TouchableOpacity>
               )}

@@ -23,5 +23,5 @@ export const registrationSteps = [
 export const registrationConfig = {
   title: 'New User Registration',
   subtitle: '3 Simple steps to Register',
-  buttonText: 'Get Started',
+  buttonText: 'Continue',
 };

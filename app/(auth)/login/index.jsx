@@ -14,7 +14,7 @@ import {
   Easing,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { navigateTo } from 'app/navigate';
+import { navigateReplace, navigateTo } from 'app/navigate';
 import { Colors } from 'config/theme';
 import { login } from 'api/auth';
 import Toast from 'react-native-toast-message';
@@ -91,7 +91,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.primary,opacity:0.7 }}>
+    <View style={{ flex: 1, backgroundColor: Colors.primary, opacity: 0.7 }}>
 
       {/* Sliding background — two copies side by side for seamless loop */}
       <Animated.View
@@ -133,11 +133,11 @@ export default function LoginScreen() {
 
         <View style={{ marginBottom: 32, alignItems: 'center' }}>
           <View style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Image
+            {/* <Image
               source={require('../../../assets/cropedAppLogo-removebg-preview.png')}
               style={{ width: 55, height: 55 }}
               resizeMode="contain"
-            />
+            /> */}
             <Text style={{ fontSize: 30, fontWeight: 'bold', color: 'white' }}>Login</Text>
           </View>
           <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>
@@ -208,9 +208,9 @@ export default function LoginScreen() {
           <View style={{ marginBottom: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <TouchableOpacity
               style={{ flexDirection: 'row', alignItems: 'center' }}
-              onPress={() => setRememberMe(!rememberMe)}
+              onPress={() => navigateReplace("registrationSteps")}
               disabled={isLoading}>
-              <View
+              {/* <View
                 style={{
                   marginRight: 8,
                   height: 18,
@@ -223,8 +223,8 @@ export default function LoginScreen() {
                   backgroundColor: 'white',
                 }}>
                 {rememberMe && <Ionicons name="checkmark" size={14} color="#0E7490" />}
-              </View>
-              <Text style={{ fontSize: 14, color: 'white' }}>Remember me</Text>
+              </View> */}
+              <Text style={{ fontSize: 14, color: 'white' }}>Sign Up</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigateTo('forgetPassword')} disabled={isLoading}>

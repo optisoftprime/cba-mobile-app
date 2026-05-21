@@ -85,7 +85,7 @@ export default function WelcomeScreen() {
 
               <TouchBtn
                 onPress={handleHelp}
-                label="Help"
+                label="Get Help"
                 backgroundColor="transparent"
                 textColor="white"
                 textClassName="text-sm font-medium"

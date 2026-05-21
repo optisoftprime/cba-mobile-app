@@ -1,14 +1,13 @@
 // app/_layout.jsx
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
-import { AppState, StatusBar } from 'react-native';
+import { AppState } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { save, load } from '../config/storage';
 import Toast from 'react-native-toast-message';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const queryClient = new QueryClient();
 
@@ -16,12 +15,10 @@ export default function Layout() {
   const router = useRouter();
 
   useEffect(() => {
-    StatusBar.setHidden(true, 'none');
     NavigationBar.setVisibilityAsync('hidden');
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
-        StatusBar.setHidden(true, 'none');
         NavigationBar.setVisibilityAsync('hidden');
       }
     });
@@ -41,7 +38,6 @@ export default function Layout() {
 
       const appState = await load('appState');
       console.log(appState);
-      // await AsyncStorage.clear()
 
       if (appState?.stage) {
         router.replace({
@@ -61,7 +57,7 @@ export default function Layout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ExpoStatusBar hidden />
+      <ExpoStatusBar style="auto" hidden={false} />
       <Stack screenOptions={{ headerShown: false }} />
       <Toast />
     </QueryClientProvider>

@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import Header from 'components/header';
 import { useLocalSearchParams } from 'expo-router';
-import { navigateBack, navigateReplace } from 'app/navigate';
+import { navigateBack, navigateReplace, navigateTo } from 'app/navigate';
 import WalletBalanceCard from 'components/walletCard';
 import EmptyState from 'components/EmptyState';
 import Dropdown from 'components/dropDown';
@@ -230,8 +230,7 @@ export default function RizeSpringList() {
 
   const handleWithdraw = () => console.log('Withdraw pressed');
   const handleCreateNewPlan = () => navigateReplace('rizeSpringSavingForm');
-  const handleViewDetails = (item) => console.log('View details:', JSON.stringify(item, null, 2));
-
+  const handleViewDetails = (item) =>  navigateTo('savingTransactionDetail', { item: JSON.stringify(item) });
   return (
     <View className="flex-1 bg-gray-50">
       <ScrollView

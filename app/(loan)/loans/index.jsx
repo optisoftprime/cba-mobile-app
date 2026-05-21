@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import Header from 'components/header';
-import { navigateBack, navigateReplace } from 'app/navigate';
+import { navigateBack, navigateReplace, navigateTo } from 'app/navigate';
 import WalletBalanceCard from 'components/walletCard';
 import EmptyState from 'components/EmptyState';
 import Dropdown from 'components/dropDown';
@@ -331,7 +331,7 @@ export default function LoanList() {
               <LoanCard
                 key={loan.loanCode ?? index}
                 loan={loan}
-                onPressDetails={(l) => console.log('View details:', JSON.stringify(l, null, 2))}
+                onPressDetails={(l) => navigateTo('loanTransactionDetail', { item: JSON.stringify(l) })}
                 onPressRepayment={(l) => console.log('Make repayment:', JSON.stringify(l, null, 2))}
               />
             ))
