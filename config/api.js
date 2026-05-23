@@ -1,8 +1,10 @@
 import axios from 'axios';
-import { load, remove, loadSecure, removeSecure } from './storage';
+import { remove, loadSecure, removeSecure } from './storage';
 import { baseUrl, orgKey } from './backendConfig';
 import { navigateReplace } from 'app/navigate';
 import Toast from 'react-native-toast-message';
+
+let isHandling401 = false;
 
 const axiosCbaInstance = axios.create({
   baseURL: baseUrl,
@@ -50,11 +52,16 @@ axiosCbaInstance.interceptors.response.use(
         `   Message : ${JSON.stringify(error.response?.data ?? error.message, null, 2)}`
     );
 
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      await removeSecure('auth');
-      await remove('user');
-      navigateReplace('landingScreen');
+    if ((error.response?.status === 401 || error.response?.status === 403) && !isHandling401) {
+      isHandling401 = true;
+      await removeSecure?.('auth');
+      await remove?.('user');
+      navigateReplace?.('landingScreen');
       Toast.show({ type: 'error', text1: 'Session Expired', text2: 'Login to continue' });
+      // reset after navigation so future sessions work correctly
+      setTimeout(() => {
+        isHandling401 = false;
+      }, 2000);
     }
 
     return Promise.reject(error);

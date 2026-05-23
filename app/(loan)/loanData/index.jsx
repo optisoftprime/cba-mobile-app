@@ -37,7 +37,7 @@ export default function LoanInfo() {
         <View className="mb-8">
           <Text className="mb-3 text-base font-bold text-white">Interest/Rewards</Text>
           <View className="space-y-2">
-            {['6% monthly', 'Rewards: Earn points for timely repayment'].map((item) => (
+            {['Monthly Interest', 'Rewards: Earn points for timely repayment'].map((item) => (
               <View key={item} className="flex-row items-start">
                 <Text className="mr-2 text-white">•</Text>
                 <Text className="flex-1 text-sm leading-6 text-white">{item}</Text>

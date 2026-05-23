@@ -72,7 +72,7 @@ export default function SavingsPage() {
       <WalletBalanceCard
         walletName="RizeSpring Savings Wallet"
         balance="₦0.00"
-        description="Across 7 savings plans"
+        description="Across 4 savings plans"
         onDescriptionPress={handleSavingsPlansPress}
         color="#0F5ED5"
         showWalletName={true}

@@ -90,7 +90,7 @@ export default function RegistrationForm() {
               {isAgreed && <Ionicons name="checkmark" size={14} color="white" />}
             </View>
             <Text className="flex-1 text-sm leading-5 text-gray-700">
-              By registering you agree to Ezone&apos;s Banking{' '}
+              By registering you agree to RiseSpring&apos;s Banking{' '}
               <Text style={{ color: Colors?.primary }}>Terms & Private Policy</Text>
             </Text>
           </TouchableOpacity>

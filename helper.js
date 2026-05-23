@@ -14,8 +14,8 @@ export const formatDate = (dateStr) => {
   });
 };
 
-export const formatAmount = (amount) =>  `₦${Number(amount ?? 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
-
+export const formatAmount = (amount) =>
+  `₦${Number(amount ?? 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
 
 export const formatWithCommas = (value) => {
   const digits = value.replace(/[^0-9.]/g, '');
@@ -37,5 +37,18 @@ export function getUniqueRecipients(transactions = []) {
   return Array.from(seen.values());
 }
 
-// ─── Recipient Suggestion Item ────────────────────────────────────────────────
+// Converts TIER_2 → "Tier 2 Account"
+export function formatTier(tier) {
+  if (!tier) return 'Tier 1 Account';
+  const match = tier?.toString()?.match(/\d+/);
+  return match ? `Tier ${match[0]} Account` : 'Tier 1 Account';
+}
 
+// Returns "Upgrade to Tier X" or null if already at max tier (3)
+export function getUpgradeLabel(tier) {
+  const match = tier?.toString()?.match(/\d+/);
+  if (!match) return 'Upgrade to Tier 2';
+  const current = parseInt(match[0], 10);
+  if (current >= 3) return null;
+  return `Upgrade to Tier ${current + 1}`;
+}

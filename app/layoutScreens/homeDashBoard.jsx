@@ -1,6 +1,5 @@
-// the user tirer is noe part of the response in the fetch user rprofile
 // screens/HomePage.jsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -16,20 +15,13 @@ import { useFocusEffect } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { navigateReplace, navigateTo } from 'app/navigate';
 import Toast from 'react-native-toast-message';
-import { trimMessage } from 'helper';
+import { trimMessage, formatAmount, formatTier, getUpgradeLabel } from 'helper';
 import { getDashBoardData } from 'api/home';
 import { fetchUserDetails } from 'api/userProfile';
 import { updateUser } from 'config/storage';
 import HomeWalletCard from 'components/homeWalletCard';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatAmount(amount) {
-  return `₦${Number(amount).toLocaleString('en-NG', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 function formatTime(dateString) {
   const date = new Date(dateString);
@@ -43,7 +35,7 @@ function formatTime(dateString) {
 function groupTransactionsByDate(transactions) {
   const groups = {};
   for (const tx of transactions) {
-    const date = new Date(tx.transactionDate);
+    const date = new Date(tx?.transactionDate);
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
@@ -109,14 +101,14 @@ function TransactionSkeleton() {
 
 function TransactionItem({ tx }) {
   const isSuccessful =
-    tx.status?.toLowerCase() === 'successful' || tx.status?.toLowerCase() === 'success';
+    tx?.status?.toLowerCase() === 'successful' || tx?.status?.toLowerCase() === 'success';
 
-  const initials = tx.customerName
+  const initials = tx?.customerName
     ? tx.customerName
-      .split(' ')
-      .slice(0, 2)
-      .map((n) => n.charAt(0).toUpperCase())
-      .join('')
+        .split(' ')
+        .slice(0, 2)
+        .map((n) => n.charAt(0).toUpperCase())
+        .join('')
     : '?';
 
   return (
@@ -145,19 +137,19 @@ function TransactionItem({ tx }) {
 
       <View style={{ marginLeft: 12, flex: 1 }}>
         <Text style={{ fontSize: 14, fontWeight: '600', color: '#1F2937' }} numberOfLines={1}>
-          {tx.customerName || tx.description || 'Transaction'}
+          {tx?.customerName || tx?.description || 'Transaction'}
         </Text>
         <Text style={{ marginTop: 2, fontSize: 12, color: '#6B7280' }}>
-          {tx.transactionType} • {formatTime(tx.transactionDate)}
+          {tx?.transactionType} • {formatTime(tx?.transactionDate)}
         </Text>
       </View>
 
       <View style={{ alignItems: 'flex-end' }}>
         <Text style={{ fontSize: 14, fontWeight: '700', color: '#1F2937' }}>
-          {formatAmount(tx.amount)}
+          {formatAmount(tx?.amount)}
         </Text>
         <Text style={{ marginTop: 2, fontSize: 12, color: isSuccessful ? '#059669' : '#D97706' }}>
-          {tx.status}
+          {tx?.status}
         </Text>
       </View>
     </TouchableOpacity>
@@ -213,29 +205,31 @@ export default function HomePage() {
     }, [])
   );
 
-  // ── User details — runs in background, never blocks the UI ──────────────────
+  // ── User profile — runs first, non-blocking ──────────────────────────────────
   const { data: userDetails } = useQuery({
     queryKey: ['userDetails'],
     queryFn: async () => {
       const result = await fetchUserDetails();
-      if (!result.ok) throw new Error(result.message);
-      const profile = result.data.data;
-      // merge into persisted storage so other screens can read it offline
+      console.log('user details consolelog');
+      console.log(JSON.stringify(result, null, 2));
+      if (!result?.ok) throw new Error(result?.message);
+      const profile = result?.data?.data;
       await updateUser({
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        middleName: profile.middleName,
-        mobilePhone: profile.mobilePhone,
-        gender: profile.gender,
-        dateOfBirth: profile.dateOfBirth,
-        address: profile.addressDto,
+        firstName: profile?.firstName,
+        lastName: profile?.lastName,
+        middleName: profile?.middleName,
+        mobilePhone: profile?.mobilePhone,
+        gender: profile?.gender,
+        dateOfBirth: profile?.dateOfBirth,
+        address: profile?.addressDto,
+        customerKycTier: profile?.customerKycTier,
       });
       return profile;
     },
     staleTime: 1000 * 60 * 10,
   });
 
-  // ── Dashboard ────────────────────────────────────────────────────────────────
+  // ── Dashboard — provides balance, account number, transactions ───────────────
   const {
     data: dashData,
     isLoading,
@@ -244,17 +238,23 @@ export default function HomePage() {
     queryKey: ['dashboard'],
     queryFn: async () => {
       const response = await getDashBoardData();
+      console.log('dashboard response');
+      console.log(JSON.stringify(response, null, 2));
       const data = response?.data?.data;
 
-      if (!data || !data?.accountName || !data?.transactionHistory) {
-        throw new Error('Incomplete account data received');
+      const accountNumber = data?.accountNumber;
+      const accountName = data?.accountName;
+      const walletBalance = data?.walletBalance;
+
+      if (!accountNumber || !accountName || walletBalance == null) {
+        navigateReplace('landingScreen');
+        throw new Error('Critical account data missing');
       }
 
-      // persist dashboard fields without overwriting user profile fields
       await updateUser({
-        accountName: data.accountName,
-        accountNumber: data.accountNumber,
-        walletBalance: data.walletBalance,
+        accountName,
+        accountNumber,
+        walletBalance,
       });
 
       return data;
@@ -282,11 +282,13 @@ export default function HomePage() {
     ? groupTransactionsByDate(limitedTransactions)
     : null;
 
-  // derive display name: prefer fresh user profile, fall back to dashboard accountName
   const firstName =
     userDetails?.firstName ??
-    dashData?.accountName?.split(' ')[0] ??
+    dashData?.accountName?.split(' ')?.[0] ??
     'there';
+
+  const accountTier = formatTier(userDetails?.customerKycTier);
+  const upgradeLabel = getUpgradeLabel(userDetails?.customerKycTier);
 
   const services = [
     { name: 'Transfer', icon: 'swap-horizontal', color: '#FCE7F3', iconColor: '#BE185D', link: 'transferType' },
@@ -351,8 +353,9 @@ export default function HomePage() {
         }
         points="3,145 Points"
         accountNumber={isLoading ? '----------' : (dashData?.accountNumber ?? '----------')}
-        accountTier="Tier 1 Account"
-        onUpgradePress={() => navigateTo('upgradeAccount')}
+        accountTier={isLoading ? 'Tier -- Account' : accountTier}
+        upgradeLabel={isLoading ? null : upgradeLabel}
+        onUpgradePress={upgradeLabel ? () => navigateTo('upgradeAccount') : null}
       />
 
       {/* ── Over View ── */}
@@ -421,7 +424,7 @@ export default function HomePage() {
               <Text className="mb-2 text-xs text-gray-500">{dateLabel}</Text>
               <View style={{ borderRadius: 12, backgroundColor: 'white', overflow: 'hidden' }}>
                 {txs.map((tx) => (
-                  <TransactionItem key={tx.id ?? tx.transactionId} tx={tx} />
+                  <TransactionItem key={tx?.id ?? tx?.transactionId} tx={tx} />
                 ))}
               </View>
             </View>

@@ -26,7 +26,7 @@ export default function SupportLegal() {
       icon: 'ticket-outline',
       title: 'Submit Ticket',
       subtitle: 'Submit any complain to us',
-      onPress: () => navigateTo('support'),
+      onPress: () => navigateTo('/appLayout/support'),
     },
   ];
 

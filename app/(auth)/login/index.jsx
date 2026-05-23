@@ -18,10 +18,11 @@ import { navigateReplace, navigateTo } from 'app/navigate';
 import { Colors } from 'config/theme';
 import { login } from 'api/auth';
 import Toast from 'react-native-toast-message';
-import { save, saveSecure } from 'config/storage';
+import { save, saveSecure, getUser } from 'config/storage';
 import TouchBtn from 'components/touchBtn';
 import { useFocusEffect } from 'expo-router';
 import * as NavigationBar from 'expo-navigation-bar';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const { width, height } = Dimensions.get('window');
 
@@ -31,10 +32,12 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [isBiometricLoading, setIsBiometricLoading] = useState(false);
+  const [hasSavedSession, setHasSavedSession] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
 
   const isFormReady = username.trim().length > 0 && password.trim().length > 0;
 
-  // Animate two copies of the background sliding left in a loop
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -48,22 +51,42 @@ export default function LoginScreen() {
     ).start();
   }, []);
 
+  useEffect(() => {
+    async function checkBiometricAndSession() {
+      const [user, hasHardware, isEnrolled] = await Promise.all([
+        getUser(),
+        LocalAuthentication.hasHardwareAsync(),
+        LocalAuthentication.isEnrolledAsync(),
+      ]);
+
+      // Show fingerprint button only if:
+      // 1. Device supports biometrics and has enrolled biometrics
+      // 2. User has a saved session with meaningful data
+      const sessionExists =
+        !!user?.accountNumber || !!user?.firstName || !!user?.username;
+
+      setBiometricAvailable(hasHardware && isEnrolled);
+      setHasSavedSession(sessionExists);
+    }
+
+    checkBiometricAndSession();
+  }, []);
+
   useFocusEffect(
     React.useCallback(() => {
       StatusBar.setHidden(true, 'none');
       NavigationBar.setVisibilityAsync('hidden');
-      // NavigationBar.setBehaviorAsync('overlay-swipe');
     }, [])
   );
 
   useFocusEffect(
     React.useCallback(() => {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        if (isLoading) return true;
+        if (isLoading || isBiometricLoading) return true;
         return false;
       });
       return () => backHandler.remove();
-    }, [isLoading])
+    }, [isLoading, isBiometricLoading])
   );
 
   const handleLogin = async () => {
@@ -90,10 +113,44 @@ export default function LoginScreen() {
     }
   };
 
+  const handleBiometricLogin = async () => {
+    setIsBiometricLoading(true);
+    try {
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Verify your identity',
+        fallbackLabel: 'Use Passcode',
+        cancelLabel: 'Cancel',
+        disableDeviceFallback: false,
+      });
+
+      if (result.success) {
+        navigateTo('appLayout');
+      } else {
+        if (result.error !== 'user_cancel' && result.error !== 'system_cancel') {
+          Toast.show({
+            type: 'error',
+            text1: 'Authentication Failed',
+            text2: 'Could not verify your identity. Try logging in manually.',
+          });
+        }
+      }
+    } catch (e) {
+      Toast.show({
+        type: 'error',
+        text1: 'Biometric Error',
+        text2: 'Something went wrong. Please log in manually.',
+      });
+    } finally {
+      setIsBiometricLoading(false);
+    }
+  };
+
+  const showBiometricButton = hasSavedSession && biometricAvailable;
+
   return (
     <View style={{ flex: 1, backgroundColor: Colors.primary, opacity: 0.7 }}>
 
-      {/* Sliding background — two copies side by side for seamless loop */}
+      {/* Sliding background */}
       <Animated.View
         style={{
           position: 'absolute',
@@ -116,7 +173,7 @@ export default function LoginScreen() {
         />
       </Animated.View>
 
-      {/* Dark overlay so text stays readable */}
+      {/* Dark overlay */}
       <View
         style={{
           position: 'absolute',
@@ -129,15 +186,10 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 80 }}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!isLoading}>
+        scrollEnabled={!isLoading && !isBiometricLoading}>
 
         <View style={{ marginBottom: 32, alignItems: 'center' }}>
           <View style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            {/* <Image
-              source={require('../../../assets/cropedAppLogo-removebg-preview.png')}
-              style={{ width: 55, height: 55 }}
-              resizeMode="contain"
-            /> */}
             <Text style={{ fontSize: 30, fontWeight: 'bold', color: 'white' }}>Login</Text>
           </View>
           <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>
@@ -164,7 +216,7 @@ export default function LoginScreen() {
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
-              editable={!isLoading}
+              editable={!isLoading && !isBiometricLoading}
               placeholder="Enter username"
               placeholderTextColor="rgba(255,255,255,0.5)"
             />
@@ -188,14 +240,14 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                editable={!isLoading}
+                editable={!isLoading && !isBiometricLoading}
                 placeholder="Enter password"
                 placeholderTextColor="rgba(255,255,255,0.5)"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={{ paddingHorizontal: 16 }}
-                disabled={isLoading}>
+                disabled={isLoading || isBiometricLoading}>
                 <Ionicons
                   name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={20}
@@ -208,43 +260,60 @@ export default function LoginScreen() {
           <View style={{ marginBottom: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <TouchableOpacity
               style={{ flexDirection: 'row', alignItems: 'center' }}
-              onPress={() => navigateReplace("registrationSteps")}
-              disabled={isLoading}>
-              {/* <View
-                style={{
-                  marginRight: 8,
-                  height: 18,
-                  width: 18,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: 3,
-                  borderWidth: 2,
-                  borderColor: 'white',
-                  backgroundColor: 'white',
-                }}>
-                {rememberMe && <Ionicons name="checkmark" size={14} color="#0E7490" />}
-              </View> */}
+              onPress={() => navigateReplace('registrationSteps')}
+              disabled={isLoading || isBiometricLoading}>
               <Text style={{ fontSize: 14, color: 'white' }}>Sign Up</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigateTo('forgetPassword')} disabled={isLoading}>
+            <TouchableOpacity
+              onPress={() => navigateTo('forgetPassword')}
+              disabled={isLoading || isBiometricLoading}>
               <Text style={{ fontSize: 14, color: 'white' }}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchBtn
-            onPress={handleLogin}
-            label="Login"
-            isLoading={isLoading}
-            loadingText="Please wait..."
-            disabled={!isFormReady}
-            backgroundColor="white"
-            textColor={Colors?.primary}
-            loadingColor={Colors?.primary}
-            textClassName="text-base font-semibold"
-            buttonClassName="w-full items-center rounded-lg py-4"
-            containerClassName=""
-          />
+          {/* Login button row — with optional fingerprint button */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <TouchBtn
+                onPress={handleLogin}
+                label="Login"
+                isLoading={isLoading}
+                loadingText="Please wait..."
+                disabled={!isFormReady || isBiometricLoading}
+                backgroundColor="white"
+                textColor={Colors?.primary}
+                loadingColor={Colors?.primary}
+                textClassName="text-base font-semibold"
+                buttonClassName="w-full items-center rounded-lg py-4"
+                containerClassName=""
+              />
+            </View>
+
+            {showBiometricButton && (
+              <TouchableOpacity
+                onPress={handleBiometricLogin}
+                disabled={isLoading || isBiometricLoading}
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.35)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isLoading || isBiometricLoading ? 0.5 : 1,
+                }}
+                activeOpacity={0.7}>
+                <Ionicons
+                  name={isBiometricLoading ? 'ellipsis-horizontal' : 'finger-print'}
+                  size={28}
+                  color="white"
+                />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </ScrollView>
     </View>

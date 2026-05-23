@@ -4,7 +4,10 @@ import { View, Text, TouchableOpacity, ScrollView, Image, Platform } from 'react
 import { navigateBack, navigateTo } from 'app/navigate';
 import Header from 'components/header';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { getUser } from 'config/storage';
+import { formatTier, getUpgradeLabel } from 'helper';
+import Toast from 'react-native-toast-message';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -12,10 +15,26 @@ export default function Profile() {
   useEffect(() => {
     async function fetchUser() {
       const data = await getUser();
+      console.log(data);
       setUser(data);
     }
     fetchUser();
   }, []);
+
+  const handleCopy = async () => {
+    if (user?.accountNumber) {
+      await Clipboard.setStringAsync(user.accountNumber);
+      Toast.show({ type: 'success', text1: 'Copied!', text2: 'Account number copied to clipboard' });
+    }
+  };
+
+  const accountTier = formatTier(user?.customerKycTier);
+  const upgradeLabel = getUpgradeLabel(user?.customerKycTier);
+
+  const fullName =
+    user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user?.accountName ?? 'Loading...';
 
   const menuItems = [
     {
@@ -96,21 +115,28 @@ export default function Profile() {
           </View>
 
           <Text className="mb-1 text-xl font-bold text-gray-900">
-            {user?.accountName ?? 'Sarah Adams'}
+            {fullName}
           </Text>
 
-          <View className="mb-3 flex-row items-center">
+          <TouchableOpacity
+            onPress={handleCopy}
+            activeOpacity={0.7}
+            className="mb-3 flex-row items-center">
             <Text className="mr-2 text-sm text-gray-600">
-              Account No: {user?.accountNumber ?? '0987654321'}
+              Account No: {user?.accountNumber ?? '----------'}
             </Text>
             <Ionicons name="copy-outline" size={16} color="#6B7280" />
-          </View>
+          </TouchableOpacity>
 
           <View className="flex-row items-center rounded-full bg-gray-100 px-4 py-2">
-            <Text className="mr-2 text-sm text-gray-700">Tier 1 Account</Text>
-            <TouchableOpacity activeOpacity={0.7}>
-              <Text className="text-sm font-semibold text-[#157196]">Upgrade to Tier 2</Text>
-            </TouchableOpacity>
+            <Text className="mr-2 text-sm text-gray-700">{accountTier}</Text>
+            {upgradeLabel && (
+              <TouchableOpacity
+                onPress={() => navigateTo('upgradeAccount')}
+                activeOpacity={0.7}>
+                <Text className="text-sm font-semibold text-[#157196]">{upgradeLabel}</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -122,18 +148,18 @@ export default function Profile() {
               style={
                 Platform.OS === 'android'
                   ? {
-                    borderRadius: 16,
-                    backgroundColor: 'white',
-                    elevation: 2,
-                    shadowColor: '#E5E7EB',
-                  }
+                      borderRadius: 16,
+                      backgroundColor: 'white',
+                      elevation: 2,
+                      shadowColor: '#E5E7EB',
+                    }
                   : {
-                    borderRadius: 16,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.06,
-                    shadowRadius: 4,
-                  }
+                      borderRadius: 16,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.06,
+                      shadowRadius: 4,
+                    }
               }>
               <TouchableOpacity
                 onPress={item.onPress}

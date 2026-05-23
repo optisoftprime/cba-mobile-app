@@ -66,7 +66,9 @@ export function useSavingsApplication({ productType = 'FIXED' } = {}) {
     { label: 'Monthly', value: 'MONTHLY' },
   ];
 
-  const interestRateOptions = ['WEEKLY', 'OTHERS', 'QUARTERLY', 'ANNUALLY', 'MONTHLY', 'DAILY'].map(
+  //OTHERS
+
+  const interestRateOptions = ['WEEKLY', 'QUARTERLY', 'ANNUALLY', 'MONTHLY', 'DAILY'].map(
     (item) => ({ label: item, value: item })
   );
 
@@ -165,7 +167,11 @@ export function useSavingsApplication({ productType = 'FIXED' } = {}) {
         });
         navigateReplace('rizeSpringsSavings');
       } else {
-        Toast.show({ type: 'error', text1: 'An error occurred', text2: response?.message?.message || response?.message });
+        Toast.show({
+          type: 'error',
+          text1: 'An error occurred',
+          text2: response?.message?.message || response?.message,
+        });
       }
     } catch (error) {
       Toast.show({ type: 'error', text1: 'An error occurred', text2: error?.message });

@@ -10,7 +10,7 @@ export const registrationSteps = [
     step: 2,
     title: 'Set your user name and password',
     description:
-      'Set up your username and password to secure your account. This will be your personal key to access Ezono Finance anytime. Choose something unique and memorable for safe banking."',
+      'Set up your username and password to secure your account. This will be your personal key to access Rize Spring Finance anytime. Choose something unique and memorable for safe banking."',
   },
   {
     step: 3,

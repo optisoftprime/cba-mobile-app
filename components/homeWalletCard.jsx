@@ -11,6 +11,7 @@ const HomeWalletCard = ({
   points = '0 Points',
   accountNumber = '----------',
   accountTier = 'Tier 1 Account',
+  upgradeLabel = null,
   onUpgradePress,
   color = Colors?.primary || '#157196',
   backgroundImagePath = require('../assets/image 17.png'),
@@ -77,16 +78,18 @@ const HomeWalletCard = ({
 
         {/* Row 3: Tier + Account Number */}
         <View className="flex-row items-center justify-between">
-          {/* Left: Tier label + Upgrade button */}
+          {/* Left: Tier label + Upgrade button (hidden at tier 3+) */}
           <View className="flex-row items-center gap-2">
             <Text className="text-xs text-white/80">{accountTier}</Text>
-            <TouchableOpacity
-              onPress={onUpgradePress}
-              className="rounded-full bg-white px-3 py-1">
-              <Text className="text-xs font-semibold" style={{ color }}>
-                Upgrade to Tier 2
-              </Text>
-            </TouchableOpacity>
+            {upgradeLabel && onUpgradePress && (
+              <TouchableOpacity
+                onPress={onUpgradePress}
+                className="rounded-full bg-white px-3 py-1">
+                <Text className="text-xs font-semibold" style={{ color }}>
+                  {upgradeLabel}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Right: Account Number + Copy */}
