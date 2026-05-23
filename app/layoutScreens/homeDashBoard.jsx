@@ -186,6 +186,34 @@ function EmptyTransactions() {
 export default function HomePage() {
   const queryClient = useQueryClient();
 
+  // ── Silently refresh user profile every time the screen focuses ──────────────
+  useFocusEffect(
+    React.useCallback(() => {
+      async function syncUserProfile() {
+        try {
+          const result = await fetchUserDetails();
+          if (!result?.ok) return;
+          const profile = result?.data?.data;
+          await updateUser({
+            firstName: profile?.firstName,
+            lastName: profile?.lastName,
+            middleName: profile?.middleName,
+            mobilePhone: profile?.mobilePhone,
+            gender: profile?.gender,
+            dateOfBirth: profile?.dateOfBirth,
+            address: profile?.addressDto,
+            customerKycTier: profile?.customerKycTier,
+          });
+          // update the query cache silently so UI reflects latest profile
+          queryClient.setQueryData(['userDetails'], profile);
+        } catch (_) {
+          // silent — never block or show errors for background sync
+        }
+      }
+      syncUserProfile();
+    }, [])
+  );
+
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
@@ -205,13 +233,11 @@ export default function HomePage() {
     }, [])
   );
 
-  // ── User profile — runs first, non-blocking ──────────────────────────────────
+  // ── User profile cache — UI reads from here, syncUserProfile keeps it fresh ──
   const { data: userDetails } = useQuery({
     queryKey: ['userDetails'],
     queryFn: async () => {
       const result = await fetchUserDetails();
-      console.log('user details consolelog');
-      console.log(JSON.stringify(result, null, 2));
       if (!result?.ok) throw new Error(result?.message);
       const profile = result?.data?.data;
       await updateUser({

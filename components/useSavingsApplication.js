@@ -9,7 +9,7 @@ const getTenorUnit = (tenorDisplayIn, count) => {
   if (tenorDisplayIn === 'IN_DAYS') return count === 1 ? 'day' : 'days';
   if (tenorDisplayIn === 'IN_MONTHS') return count === 1 ? 'month' : 'months';
   return count === 1 ? 'year' : 'years';
-};
+};  
 
 export function useSavingsApplication({ productType = 'FIXED' } = {}) {
   const [amount, setAmount] = useState('');
