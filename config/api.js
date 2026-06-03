@@ -1,10 +1,24 @@
 import axios from 'axios';
-import { remove, loadSecure, removeSecure } from './storage';
-import { baseUrl, orgKey } from './backendConfig';
-import { navigateReplace } from 'app/navigate';
+import { remove, loadSecure, removeSecure, saveSecure } from './storage';
+import { baseUrl, orgKey, routes } from './backendConfig';
+import { navigateReplace, useCurrentRoute } from 'app/navigate';
 import Toast from 'react-native-toast-message';
+import { refreshToken } from 'api/auth';
 
-let isHandling401 = false;
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
 
 const axiosCbaInstance = axios.create({
   baseURL: baseUrl,
@@ -14,54 +28,110 @@ const axiosCbaInstance = axios.create({
   },
 });
 
+// ─────────────────────────────────────────────
+// Request interceptor (attach access token)
+// ─────────────────────────────────────────────
 axiosCbaInstance.interceptors.request.use(async (config) => {
   const auth = await loadSecure('auth');
+
   if (auth?.accessToken) {
     config.headers.Authorization = `Bearer ${auth.accessToken}`;
   }
 
-  console.log(
-    `\n📤 [API REQUEST]\n` +
-      `   Method  : ${config.method?.toUpperCase()}\n` +
-      `   URL     : ${config.baseURL}${config.url}\n` +
-      `   Token   : ${auth?.accessToken ?? 'none'}\n` +
-      `   Params  : ${JSON.stringify(config.params ?? {}, null, 2)}\n` +
-      `   Payload : ${JSON.stringify(config.data ?? {}, null, 2)}`
-  );
-
   return config;
 });
 
+// ─────────────────────────────────────────────
+// Response interceptor (handle refresh flow)
+// ─────────────────────────────────────────────
 axiosCbaInstance.interceptors.response.use(
-  (response) => {
-    console.log(
-      `\n✅ [API RESPONSE]\n` +
-        `   Method  : ${response.config.method?.toUpperCase()}\n` +
-        `   URL     : ${response.config.baseURL}${response.config.url}\n` +
-        `   Status  : ${response.status}\n` +
-        `   Data    : ${JSON.stringify(response.data, null, 2)}`
-    );
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    console.log(
-      `\n❌ [API ERROR]\n` +
-        `   Method  : ${error.config?.method?.toUpperCase()}\n` +
-        `   URL     : ${error.config?.baseURL}${error.config?.url}\n` +
-        `   Status  : ${error.response?.status ?? 'Network Error'}\n` +
-        `   Message : ${JSON.stringify(error.response?.data ?? error.message, null, 2)}`
-    );
+    const originalRequest = error.config;
+    const status = error.response?.status;
 
-    if ((error.response?.status === 401 || error.response?.status === 403) && !isHandling401) {
-      isHandling401 = true;
-      await removeSecure?.('auth');
-      await remove?.('user');
-      navigateReplace?.('landingScreen');
-      Toast.show({ type: 'error', text1: 'Session Expired', text2: 'Login to continue' });
-      // reset after navigation so future sessions work correctly
-      setTimeout(() => {
-        isHandling401 = false;
-      }, 2000);
+    if ((status === 401 || status === 403) && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axiosCbaInstance(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const auth = await loadSecure('auth');
+
+        if (!auth?.refreshToken) {
+          throw new Error('No refresh token found');
+        }
+
+        // ── refresh token request ──
+        const refreshResponse = await refreshToken({
+          refreshToken: auth.refreshToken,
+        });
+
+        // Response shape from backend:
+        // { success: true, data: { token: "...", refreshToken: "...", ... }, errorCode: "200" }
+        const refreshSucceeded =
+          refreshResponse?.ok && refreshResponse?.data?.success === true;
+
+        if (refreshSucceeded) {
+          const newAccessToken = refreshResponse.data.data.token;
+          const newRefreshToken =
+            refreshResponse.data.data.refreshToken || auth.refreshToken;
+
+          await saveSecure('auth', {
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+          });
+
+          axiosCbaInstance.defaults.headers.Authorization = `Bearer ${newAccessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+          processQueue(null, newAccessToken);
+
+          return axiosCbaInstance(originalRequest);
+        }
+
+        throw new Error(refreshResponse?.message || 'Refresh token invalid');
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+
+        console.log('Refresh failed:', refreshError?.message);
+
+        await removeSecure('auth');
+        await remove('user');
+
+        // ── Guard: don't redirect to login if we're already there ──
+        // router.pathname is a string like "/login" or "/auth/login"
+        // We check the axios request URL as a fallback since this file
+        // is not a React component and can't call hooks directly.
+        const requestUrl = originalRequest?.url ?? '';
+        const isLoginRequest =
+          requestUrl.includes('login') ||
+          requestUrl.includes('auth');
+
+        if (!isLoginRequest) {
+          Toast.show({
+            type: 'error',
+            text1: 'Session Expired',
+            text2: 'Please login again',
+          });
+
+          navigateReplace('login');
+        }
+
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
     return Promise.reject(error);

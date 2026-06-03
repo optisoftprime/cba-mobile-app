@@ -23,6 +23,7 @@ import TouchBtn from 'components/touchBtn';
 import { useFocusEffect } from 'expo-router';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { fetchUserDetails } from 'api/userProfile';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,11 +36,26 @@ export default function LoginScreen() {
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
   const [hasSavedSession, setHasSavedSession] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState(null); // 'fingerprint' | 'face' | null
+  const [isTokenValid, setIsTokenValid] = useState(false);
 
   const isFormReady = username.trim().length > 0 && password.trim().length > 0;
+  const isAnyLoading = isLoading || isBiometricLoading;
 
   const slideAnim = useRef(new Animated.Value(0)).current;
 
+  // Check if existing token is still valid on mount
+  useEffect(() => {
+    async function checkTokenValidity() {
+      const response = await fetchUserDetails();
+      if (response?.ok) {
+        setIsTokenValid(true);
+      }
+    }
+    checkTokenValidity();
+  }, []);
+
+  // Sliding background loop
   useEffect(() => {
     Animated.loop(
       Animated.timing(slideAnim, {
@@ -51,22 +67,30 @@ export default function LoginScreen() {
     ).start();
   }, []);
 
+  // Check biometric availability + saved session
   useEffect(() => {
     async function checkBiometricAndSession() {
-      const [user, hasHardware, isEnrolled] = await Promise.all([
+      const [user, hasHardware, isEnrolled, supportedTypes] = await Promise.all([
         getUser(),
         LocalAuthentication.hasHardwareAsync(),
         LocalAuthentication.isEnrolledAsync(),
+        LocalAuthentication.supportedAuthenticationTypesAsync(),
       ]);
 
-      // Show fingerprint button only if:
-      // 1. Device supports biometrics and has enrolled biometrics
-      // 2. User has a saved session with meaningful data
       const sessionExists =
         !!user?.accountNumber || !!user?.firstName || !!user?.username;
 
-      setBiometricAvailable(hasHardware && isEnrolled);
+      const canUseBiometric = hasHardware && isEnrolled;
+      setBiometricAvailable(canUseBiometric);
       setHasSavedSession(sessionExists);
+
+      if (canUseBiometric && supportedTypes?.length > 0) {
+        // FACIAL_RECOGNITION = 2, FINGERPRINT = 1
+        const hasFace = supportedTypes.includes(
+          LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION
+        );
+        setBiometricType(hasFace ? 'face' : 'fingerprint');
+      }
     }
 
     checkBiometricAndSession();
@@ -82,11 +106,11 @@ export default function LoginScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        if (isLoading || isBiometricLoading) return true;
+        if (isAnyLoading) return true;
         return false;
       });
       return () => backHandler.remove();
-    }, [isLoading, isBiometricLoading])
+    }, [isAnyLoading])
   );
 
   const handleLogin = async () => {
@@ -95,10 +119,12 @@ export default function LoginScreen() {
       username: username.trim(),
       password: password.trim(),
     });
+    console.log(JSON.stringify(response, null, 2));
 
     if (response?.ok) {
       const accessToken = response?.data?.data?.token;
-      await saveSecure('auth', { accessToken });
+      const refreshToken = response?.data?.data?.refreshToken;
+      await saveSecure('auth', { accessToken, refreshToken });
       if (rememberMe) {
         await save('user', { username: response?.data?.data?.username });
       }
@@ -107,7 +133,7 @@ export default function LoginScreen() {
       Toast.show({
         type: 'error',
         text1: 'Login Failed',
-        text2: response?.message || 'Invalid credentials',
+        text2: response?.message || 'Invalid credentials. Please try again.',
       });
       setIsLoading(false);
     }
@@ -117,8 +143,11 @@ export default function LoginScreen() {
     setIsBiometricLoading(true);
     try {
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Verify your identity',
-        fallbackLabel: 'Use Passcode',
+        promptMessage:
+          biometricType === 'face'
+            ? 'Look at your camera to continue'
+            : 'Touch the fingerprint sensor to continue',
+        fallbackLabel: 'Use PIN / Password',
         cancelLabel: 'Cancel',
         disableDeviceFallback: false,
       });
@@ -126,30 +155,51 @@ export default function LoginScreen() {
       if (result.success) {
         navigateTo('appLayout');
       } else {
-        if (result.error !== 'user_cancel' && result.error !== 'system_cancel') {
+        // result.error values: user_cancel, system_cancel, app_cancel,
+        // authentication_failed, not_enrolled, not_available, passcode_not_set, lockout, lockout_permanent, unknown
+        if (result.error === 'lockout' || result.error === 'lockout_permanent') {
           Toast.show({
             type: 'error',
-            text1: 'Authentication Failed',
-            text2: 'Could not verify your identity. Try logging in manually.',
+            text1: 'Too Many Attempts',
+            text2: 'Biometric locked. Please log in with your password.',
+          });
+        } else if (
+          result.error !== 'user_cancel' &&
+          result.error !== 'system_cancel' &&
+          result.error !== 'app_cancel'
+        ) {
+          Toast.show({
+            type: 'error',
+            text1: 'Verification Failed',
+            text2: 'Could not verify your identity. Please log in manually.',
           });
         }
+        // user_cancel / system_cancel: silent — no toast needed
       }
     } catch (e) {
       Toast.show({
         type: 'error',
         text1: 'Biometric Error',
-        text2: 'Something went wrong. Please log in manually.',
+        text2: 'An unexpected error occurred. Please log in manually.',
       });
     } finally {
       setIsBiometricLoading(false);
     }
   };
 
-  const showBiometricButton = hasSavedSession && biometricAvailable;
+  const showBiometricButton = hasSavedSession && biometricAvailable && isTokenValid;
+
+  const biometricIcon =
+    biometricType === 'face'
+      ? isBiometricLoading
+        ? 'ellipsis-horizontal'
+        : 'scan-outline'
+      : isBiometricLoading
+        ? 'ellipsis-horizontal'
+        : 'finger-print';
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.primary, opacity: 0.7 }}>
-
+    <View style={{ flex: 1, backgroundColor: Colors.primary }}>
       {/* Sliding background */}
       <Animated.View
         style={{
@@ -177,103 +227,109 @@ export default function LoginScreen() {
       <View
         style={{
           position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           backgroundColor: Colors.primary,
-          opacity: 0.55,
+          opacity: 0.6,
         }}
       />
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 80 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 24,
+          paddingTop: 80,
+          paddingBottom: 40,
+        }}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!isLoading && !isBiometricLoading}>
+        scrollEnabled={!isAnyLoading}
+        keyboardShouldPersistTaps="handled">
 
-        <View style={{ marginBottom: 32, alignItems: 'center' }}>
-          <View style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={{ fontSize: 30, fontWeight: 'bold', color: 'white' }}>Login</Text>
-          </View>
-          <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>
-            Kindly login into your account
+        {/* Header */}
+        <View style={{ marginBottom: 40 }}>
+          <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginBottom: 6 }}>
+            Welcome back
+          </Text>
+          <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.65)', lineHeight: 22 }}>
+            Sign in to continue to your account
           </Text>
         </View>
 
+        {/* Form */}
         <View style={{ width: '100%' }}>
-          <View style={{ marginBottom: 24 }}>
-            <Text style={{ marginBottom: 8, fontSize: 14, fontWeight: '500', color: 'white' }}>
-              Username
+          {/* Username */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ marginBottom: 8, fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.85)', letterSpacing: 0.3 }}>
+              USERNAME
             </Text>
             <TextInput
               style={{
-                borderRadius: 8,
+                borderRadius: 12,
                 borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.3)',
+                borderColor: 'rgba(255,255,255,0.25)',
                 backgroundColor: 'rgba(255,255,255,0.1)',
                 paddingHorizontal: 16,
-                paddingVertical: 16,
-                fontSize: 16,
+                paddingVertical: 15,
+                fontSize: 15,
                 color: 'white',
               }}
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
-              editable={!isLoading && !isBiometricLoading}
-              placeholder="Enter username"
-              placeholderTextColor="rgba(255,255,255,0.5)"
+              autoCorrect={false}
+              editable={!isAnyLoading}
+              placeholder="Enter your username"
+              placeholderTextColor="rgba(255,255,255,0.35)"
             />
           </View>
 
-          <View style={{ marginBottom: 24 }}>
-            <Text style={{ marginBottom: 8, fontSize: 14, fontWeight: '500', color: 'white' }}>
-              Password
+          {/* Password */}
+          <View style={{ marginBottom: 32 }}>
+            <Text style={{ marginBottom: 8, fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.85)', letterSpacing: 0.3 }}>
+              PASSWORD
             </Text>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                borderRadius: 8,
+                borderRadius: 12,
                 borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.3)',
+                borderColor: 'rgba(255,255,255,0.25)',
                 backgroundColor: 'rgba(255,255,255,0.1)',
               }}>
               <TextInput
-                style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 16, fontSize: 16, color: 'white' }}
+                style={{
+                  flex: 1,
+                  paddingHorizontal: 16,
+                  paddingVertical: 15,
+                  fontSize: 15,
+                  color: 'white',
+                }}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                editable={!isLoading && !isBiometricLoading}
-                placeholder="Enter password"
-                placeholderTextColor="rgba(255,255,255,0.5)"
+                editable={!isAnyLoading}
+                placeholder="Enter your password"
+                placeholderTextColor="rgba(255,255,255,0.35)"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
-                style={{ paddingHorizontal: 16 }}
-                disabled={isLoading || isBiometricLoading}>
+                style={{ paddingHorizontal: 16, paddingVertical: 15 }}
+                disabled={isAnyLoading}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Ionicons
                   name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={20}
-                  color="white"
+                  color="rgba(255,255,255,0.65)"
                 />
               </TouchableOpacity>
             </View>
           </View>
 
-          <View style={{ marginBottom: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center' }}
-              onPress={() => navigateReplace('registrationSteps')}
-              disabled={isLoading || isBiometricLoading}>
-              <Text style={{ fontSize: 14, color: 'white' }}>Sign Up</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => navigateTo('forgetPassword')}
-              disabled={isLoading || isBiometricLoading}>
-              <Text style={{ fontSize: 14, color: 'white' }}>Forgot Password?</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Login button row — with optional fingerprint button */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          {/* Login + Biometric button */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 28 }}>
             <View style={{ flex: 1 }}>
               <TouchBtn
                 onPress={handleLogin}
@@ -285,7 +341,7 @@ export default function LoginScreen() {
                 textColor={Colors?.primary}
                 loadingColor={Colors?.primary}
                 textClassName="text-base font-semibold"
-                buttonClassName="w-full items-center rounded-lg py-4"
+                buttonClassName="w-full items-center rounded-xl py-4"
                 containerClassName=""
               />
             </View>
@@ -293,26 +349,61 @@ export default function LoginScreen() {
             {showBiometricButton && (
               <TouchableOpacity
                 onPress={handleBiometricLogin}
-                disabled={isLoading || isBiometricLoading}
+                disabled={isAnyLoading}
                 style={{
                   width: 54,
                   height: 54,
-                  borderRadius: 12,
-                  backgroundColor: 'rgba(255,255,255,0.15)',
-                  borderWidth: 1,
-                  borderColor: 'rgba(255,255,255,0.35)',
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(255,255,255,0.3)',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  opacity: isLoading || isBiometricLoading ? 0.5 : 1,
+                  opacity: isAnyLoading ? 0.45 : 1,
                 }}
                 activeOpacity={0.7}>
                 <Ionicons
-                  name={isBiometricLoading ? 'ellipsis-horizontal' : 'finger-print'}
-                  size={28}
+                  name={biometricIcon}
+                  size={26}
                   color="white"
                 />
               </TouchableOpacity>
             )}
+          </View>
+
+          {/* Bottom links row */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              flexWrap: 'wrap',
+            }}>
+            <TouchableOpacity
+              onPress={() => navigateReplace('registrationSteps')}
+              disabled={isAnyLoading}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>Sign Up</Text>
+            </TouchableOpacity>
+
+            <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)' }}>·</Text>
+
+            <TouchableOpacity
+              onPress={() => navigateReplace('registration')}
+              disabled={isAnyLoading}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>Register</Text>
+            </TouchableOpacity>
+
+            <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)' }}>·</Text>
+
+            <TouchableOpacity
+              onPress={() => navigateTo('forgetPassword')}
+              disabled={isAnyLoading}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>Forgot Password?</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

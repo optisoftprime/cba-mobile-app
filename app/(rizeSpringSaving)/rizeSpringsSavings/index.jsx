@@ -254,7 +254,7 @@ export default function RizeSpringList() {
         />
 
         <WalletBalanceCard
-          walletName="Rize Spring Savings Wallet"
+          walletName="RizeSpring Savings Wallet"
           balance="₦0.00"
           description="6% Interest Rate"
           backgroundImagePath={require('../../../assets/Vector .png')}

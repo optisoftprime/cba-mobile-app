@@ -1,6 +1,9 @@
+import { navigateReplace } from 'app/navigate';
 import axiosCbaInstance from 'config/api';
-import { routes } from 'config/backendConfig';
+import { baseUrl, orgKey, routes } from 'config/backendConfig';
+import { loadSecure, remove, removeSecure } from 'config/storage';
 import { trimMessage } from 'helper';
+import Toast from 'react-native-toast-message';
 
 export async function createSupportTicket(param, payload) {
   try {
@@ -60,19 +63,46 @@ export async function fetchNotificationPreferences(param) {
 
 export async function fetchUserDetails(param) {
   try {
-    const response = await axiosCbaInstance.get(routes?.fetchUserDetails, {
-      params: param,
+    const auth = await loadSecure('auth');
+
+    // Build query string from param object if provided
+    const queryString =
+      param && Object.keys(param).length > 0 ? '?' + new URLSearchParams(param).toString() : '';
+
+    const response = await fetch(`${baseUrl}${routes?.fetchUserDetails}${queryString}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-org-key': orgKey,
+        ...(auth?.accessToken && {
+          Authorization: `Bearer ${auth.accessToken}`,
+        }),
+      },
     });
-    return { ok: true, data: response.data };
+
+    const data = await response.json();
+
+    if (response.status === 401 || response.status === 403) {
+      await removeSecure('auth');
+      await remove('user');
+      Toast.show({
+        type: 'error',
+        text1: 'Session Expired',
+        text2: 'Please login again',
+      });
+      navigateReplace('login');
+      return { ok: false, message: 'Session expired' };
+    }
+
+    if (!response.ok) {
+      console.log(JSON.stringify(data?.message || data, null, 2));
+      return { ok: false, message: trimMessage(data?.message || 'Request failed') };
+    }
+
+    return { ok: true, data };
   } catch (error) {
-    console.log(
-      JSON.stringify(
-        error?.response?.data || error?.response?.data?.message || error?.message,
-        null,
-        2
-      )
-    );
-    return { ok: false, message: trimMessage(error?.response?.data?.message || error?.message) };
+    console.log(JSON.stringify(error?.message, null, 2));
+    return { ok: false, message: trimMessage(error?.message) };
   }
 }
 

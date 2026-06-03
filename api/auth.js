@@ -178,3 +178,28 @@ export async function accountSetup(payload) {
     return { ok: false, message: trimMessage(error?.response?.data?.message || error?.message) };
   }
 }
+
+export async function refreshToken(payload) {
+  try {
+    const response = await fetch(`${baseUrl}${routes?.refreshToken}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-org-key': orgKey,
+      },
+      body: JSON.stringify(payload), // { refreshToken: "..." }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.log(JSON.stringify(data?.message || data, null, 2));
+      return { ok: false, message: trimMessage(data?.message || 'Token refresh failed') };
+    }
+
+    return { ok: true, data };
+  } catch (error) {
+    console.log(JSON.stringify(error?.message, null, 2));
+    return { ok: false, message: trimMessage(error?.message) };
+  }
+}

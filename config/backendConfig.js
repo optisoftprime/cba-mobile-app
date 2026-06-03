@@ -1,5 +1,5 @@
 export const baseUrl = 'https://gateway.ezoneapps.com:30002/ezone-cba-mobile';
-export const orgKey = 'ORG-1728290007232';
+export const orgKey = 'ORG-1767708715619';
 
 export const routes = {
   // Auth
@@ -48,6 +48,12 @@ export const routes = {
   updateUserNotificationPreferences: '/api/v1/user-profile/update-user-notification-preferences',
 
   // KYC
-fetchAllKycTiers: '/api/v1/kyc-management/fetch-all-kyc-tiers',
-kycUpgradeRequest: '/api/v1/kyc-management/kyc-upgrade-request',
+  fetchAllKycTiers: '/api/v1/kyc-management/fetch-all-kyc-tiers',
+  kycUpgradeRequest: '/api/v1/kyc-management/kyc-upgrade-request',
+
+  // Transaction
+  transactionHistory: '/api/v1/transaction/transaction-history',
+  downloadStatement: '/api/v1/transaction/download-statement',
+
+  refreshToken: '/api/v1/auth/refresh-token', 
 };

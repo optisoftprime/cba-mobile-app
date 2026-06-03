@@ -34,6 +34,7 @@ export default function Support() {
   const [imageBase64, setImageBase64] = useState('');
   const [imageMimeType, setImageMimeType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     async function loadUserPhone() {
@@ -41,9 +42,20 @@ export default function Support() {
       if (user?.mobilePhone) {
         setPhoneNumber(user.mobilePhone);
       }
+      if (user?.firstName || user?.lastName) {
+        const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ');
+        setUserName(fullName);
+      }
     }
     loadUserPhone();
   }, []);
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
 
   const clearForm = () => {
     setTicketCategory('');
@@ -147,15 +159,21 @@ export default function Support() {
 
         {/* Profile Section */}
         <View className="items-center px-5 py-6">
-          <View className="mb-4 h-24 w-24 overflow-hidden rounded-full bg-gray-200">
-            <Image
-              source={require('../../assets/image 21.png')}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
-            />
+          {/* Avatar with initials or fallback icon */}
+          <View
+            className="mb-4 h-24 w-24 overflow-hidden rounded-full bg-[#157196] items-center justify-center">
+            {userName ? (
+              <Text style={{ fontSize: 32, fontWeight: '700', color: '#fff' }}>
+                {getInitials(userName)}
+              </Text>
+            ) : (
+              <Ionicons name="person" size={44} color="#fff" />
+            )}
           </View>
 
-          <Text className="mb-4 text-xl font-bold text-gray-900">Sarah Adams</Text>
+          <Text className="mb-4 text-xl font-bold text-gray-900">
+            {userName || 'Loading...'}
+          </Text>
 
           <View className="w-full rounded-lg bg-[#157196] p-4">
             <Text className="text-center text-sm leading-5 text-white">
