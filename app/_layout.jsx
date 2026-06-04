@@ -3,57 +3,15 @@ import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import * as NavigationBar from 'expo-navigation-bar';
-import { useRouter } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { save, load } from '../config/storage';
 import Toast from 'react-native-toast-message';
+
+// ✅ Remove this: import * as NavigationBar from 'expo-navigation-bar';
 
 const queryClient = new QueryClient();
 
 export default function Layout() {
-  const router = useRouter();
-
-  useEffect(() => {
-    NavigationBar.setVisibilityAsync('hidden');
-
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        NavigationBar.setVisibilityAsync('hidden');
-      }
-    });
-
-    return () => subscription.remove();
-  }, []);
-
-  useEffect(() => {
-    const checkFirstOpen = async () => {
-      const app = await load('app');
-
-      if (!app?.hasOpenedBefore) {
-        await save('app', { hasOpenedBefore: true });
-        router.replace('/onboarding');
-        return;
-      }
-
-      const appState = await load('appState');
-      console.log(appState);
-
-      if (appState?.stage) {
-        router.replace({
-          pathname: `/${appState.stage}`,
-          params: appState?.params,
-        });
-        return;
-      }
-
-      setTimeout(() => {
-        router.replace('/landingScreen');
-      }, 1000);
-    };
-
-    checkFirstOpen();
-  }, []);
+  // ✅ Remove the entire NavigationBar useEffect — app.json handles it
 
   return (
     <QueryClientProvider client={queryClient}>

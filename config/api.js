@@ -79,13 +79,11 @@ axiosCbaInstance.interceptors.response.use(
 
         // Response shape from backend:
         // { success: true, data: { token: "...", refreshToken: "...", ... }, errorCode: "200" }
-        const refreshSucceeded =
-          refreshResponse?.ok && refreshResponse?.data?.success === true;
+        const refreshSucceeded = refreshResponse?.ok && refreshResponse?.data?.success === true;
 
         if (refreshSucceeded) {
           const newAccessToken = refreshResponse.data.data.token;
-          const newRefreshToken =
-            refreshResponse.data.data.refreshToken || auth.refreshToken;
+          const newRefreshToken = refreshResponse.data.data.refreshToken || auth.refreshToken;
 
           await saveSecure('auth', {
             accessToken: newAccessToken,
@@ -114,9 +112,7 @@ axiosCbaInstance.interceptors.response.use(
         // We check the axios request URL as a fallback since this file
         // is not a React component and can't call hooks directly.
         const requestUrl = originalRequest?.url ?? '';
-        const isLoginRequest =
-          requestUrl.includes('login') ||
-          requestUrl.includes('auth');
+        const isLoginRequest = requestUrl.includes('login') || requestUrl.includes('auth');
 
         if (!isLoginRequest) {
           Toast.show({

@@ -5,18 +5,15 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SplashScreenAppImage } from '../svgs/splashScreen';
 import '../global.css';
-import { navigateTo } from './navigate';
+import { save, load } from '../config/storage';
 
 export default function SplashScreen() {
   const router = useRouter();
-  
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
   const logoRotate = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Logo entrance animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -38,20 +35,43 @@ export default function SplashScreen() {
       }),
     ]).start();
 
-    // Navigate after 3 seconds
-    const timer = setTimeout(() => {
-      // Fade out before navigation
+    const timer = setTimeout(async () => {
+      // ✅ All navigation logic lives here now
+      let destination = '/landingScreen';
+      let params = undefined;
+
+      try {
+        const app = await load('app');
+
+        if (!app?.hasOpenedBefore) {
+          await save('app', { hasOpenedBefore: true });
+          destination = '/onboarding';
+        } else {
+          const appState = await load('appState');
+          if (appState?.stage) {
+            destination = `/${appState.stage}`;
+            params = appState?.params;
+          }
+        }
+      } catch (e) {
+        console.warn('Storage read failed, defaulting to landingScreen', e);
+      }
+
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 400,
         useNativeDriver: true,
       }).start(() => {
-        navigateTo("onboarding")
+        if (params) {
+          router.replace({ pathname: destination, params });
+        } else {
+          router.replace(destination);
+        }
       });
     }, 2600);
 
     return () => clearTimeout(timer);
-  }, [router, fadeAnim, scaleAnim, logoRotate]);
+  }, []);
 
   const rotateInterpolate = logoRotate.interpolate({
     inputRange: [0, 1],
@@ -59,18 +79,13 @@ export default function SplashScreen() {
   });
 
   return (
-    <View className="flex-1" style={{ backgroundColor: "#D4E8F5" }}>
+    <View className="flex-1" style={{ backgroundColor: '#D4E8F5' }}>
       <StatusBar style="light" />
-      
-      {/* Animated Logo Container - Centered */}
       <View className="flex-1 items-center justify-center">
         <Animated.View
           style={{
             opacity: fadeAnim,
-            transform: [
-              { scale: scaleAnim },
-              { rotate: rotateInterpolate },
-            ],
+            transform: [{ scale: scaleAnim }, { rotate: rotateInterpolate }],
           }}>
           <SplashScreenAppImage />
         </Animated.View>

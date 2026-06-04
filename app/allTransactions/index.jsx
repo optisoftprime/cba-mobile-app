@@ -1,6 +1,4 @@
-import { getTransactionHistory } from 'api/transactions';
-import { loadSecure } from 'config/storage';
-import { baseUrl, orgKey, routes } from 'config/backendConfig';
+import { getTransactionHistory, downloadStatement } from 'api/transactions';
 import React, { useState } from 'react';
 import {
     View,
@@ -18,9 +16,6 @@ import { formatAmount } from 'helper';
 import Toast from 'react-native-toast-message';
 import TransactionDetailModal from './../../components/transactionDetailsModal';
 import StatementFormatModal from './../../components/statementFormatModal';
-
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -236,7 +231,7 @@ export default function AllTransactions() {
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
 
-    const [isDownloading, setIsDownloading] = useState(false);
+    const [isSending, setIsSending] = useState(false);
     const [showFormatModal, setShowFormatModal] = useState(false);
 
     const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -280,70 +275,38 @@ export default function AllTransactions() {
         setSelectedTransaction(null);
     }
 
-    async function handleDownloadStatement(format) {
+    async function handleRequestStatement(format) {
         setShowFormatModal(false);
-        setIsDownloading(true);
+        setIsSending(true);
 
         try {
-            const auth = await loadSecure('auth');
-
-            const isExcel = format === 'excel';
-            const extension = isExcel ? 'xlsx' : 'pdf';
-            const mimeType = isExcel
-                ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                : 'application/pdf';
-            const UTI = isExcel ? 'com.microsoft.excel.xlsx' : 'com.adobe.pdf';
-            const filename = `Statement_${formatDateParam(appliedStart)}_to_${formatDateParam(appliedEnd)}.${extension}`;
-            const fileUri = `${FileSystem.documentDirectory}${filename}`;
-
-            // Build query params
-            const params = new URLSearchParams({
+            const response = await downloadStatement({
                 startDate: formatDateParam(appliedStart),
                 endDate: formatDateParam(appliedEnd),
                 format,
-            }).toString();
+            });
 
-            const downloadUrl = `${baseUrl}${routes?.downloadStatement}?${params}`;
-
-            // Use createDownloadResumable — downloads binary directly to disk,
-            // no string conversion, no base64 corruption, supports auth headers
-            const downloadResumable = FileSystem.createDownloadResumable(
-                downloadUrl,
-                fileUri,
-                {
-                    headers: {
-                        'x-org-key': orgKey,
-                        ...(auth?.accessToken && {
-                            Authorization: `Bearer ${auth.accessToken}`,
-                        }),
-                    },
-                }
-            );
-
-            const result = await downloadResumable.downloadAsync();
-
-            if (!result?.uri) {
-                Toast.show({ type: 'error', text1: 'Failed', text2: 'Download failed' });
-                return;
-            }
-
-            const canShare = await Sharing.isAvailableAsync();
-            if (canShare) {
-                await Sharing.shareAsync(result.uri, {
-                    mimeType,
-                    dialogTitle: 'Save Statement',
-                    UTI,
+            if (response?.ok) {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Statement Sent',
+                    text2: 'Your statement has been sent to your email.',
                 });
-                Toast.show({ type: 'success', text1: 'Success', text2: 'Statement ready to save' });
             } else {
-                Toast.show({ type: 'success', text1: 'Saved', text2: `Saved to: ${result.uri}` });
+                Toast.show({
+                    type: 'error',
+                    text1: 'Failed',
+                    text2: response?.message || 'Could not send statement. Please try again.',
+                });
             }
-
         } catch (error) {
-            console.error('Statement generation error:', error);
-            Toast.show({ type: 'error', text1: 'Error', text2: 'Something went wrong while downloading' });
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong. Please try again.',
+            });
         } finally {
-            setIsDownloading(false);
+            setIsSending(false);
         }
     }
 
@@ -379,6 +342,7 @@ export default function AllTransactions() {
                 </View>
 
                 <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {/* Filter Button */}
                     <TouchableOpacity
                         onPress={handleApplyFilter}
                         activeOpacity={0.8}
@@ -396,15 +360,16 @@ export default function AllTransactions() {
                         <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>Filter</Text>
                     </TouchableOpacity>
 
+                    {/* Statement Button */}
                     <TouchableOpacity
                         onPress={() => setShowFormatModal(true)}
-                        disabled={isDownloading}
+                        disabled={isSending}
                         activeOpacity={0.8}
                         style={{
                             flex: 1,
-                            backgroundColor: isDownloading ? '#E5E7EB' : '#F0FDF4',
+                            backgroundColor: isSending ? '#E5E7EB' : '#F0FDF4',
                             borderWidth: 1,
-                            borderColor: isDownloading ? '#E5E7EB' : '#059669',
+                            borderColor: isSending ? '#E5E7EB' : '#059669',
                             borderRadius: 10,
                             paddingVertical: 11,
                             alignItems: 'center',
@@ -413,17 +378,17 @@ export default function AllTransactions() {
                             gap: 6,
                         }}>
                         <Ionicons
-                            name="download-outline"
+                            name="mail-outline"
                             size={16}
-                            color={isDownloading ? '#9CA3AF' : '#059669'}
+                            color={isSending ? '#9CA3AF' : '#059669'}
                         />
                         <Text
                             style={{
-                                color: isDownloading ? '#9CA3AF' : '#059669',
+                                color: isSending ? '#9CA3AF' : '#059669',
                                 fontWeight: '600',
                                 fontSize: 14,
                             }}>
-                            {isDownloading ? 'Downloading...' : 'Statement'}
+                            {isSending ? 'Sending...' : 'Statement'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -512,8 +477,8 @@ export default function AllTransactions() {
             <StatementFormatModal
                 visible={showFormatModal}
                 onClose={() => setShowFormatModal(false)}
-                onSelect={handleDownloadStatement}
-                isDownloading={isDownloading}
+                onSelect={handleRequestStatement}
+                isDownloading={isSending}
             />
 
             {/* ── Transaction Detail Modal ── */}
