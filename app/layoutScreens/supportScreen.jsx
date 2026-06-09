@@ -65,17 +65,11 @@ export default function Support() {
     setImageMimeType('');
   };
 
+  // NOTE: No permission request needed on Android 13+.
+  // launchImageLibraryAsync uses the system photo picker which requires no
+  // READ_MEDIA_IMAGES permission — removing requestMediaLibraryPermissionsAsync
+  // prevents Google Play from flagging restricted permissions in your build.
   const handlePickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Toast.show({
-        type: 'error',
-        text1: 'Permission Denied',
-        text2: 'Please allow access to your media library.',
-      });
-      return;
-    }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -113,13 +107,11 @@ export default function Support() {
     setIsSubmitting(true);
 
     try {
-      const imageUrl = imageBase64 ? imageBase64 : '';
-
       const payload = {
         ticketCategory,
         comment,
         phoneNumber,
-        imageUrl,
+        imageUrl: imageBase64 ?? '',
       };
 
       const result = await createSupportTicket(null, payload);
@@ -159,9 +151,7 @@ export default function Support() {
 
         {/* Profile Section */}
         <View className="items-center px-5 py-6">
-          {/* Avatar with initials or fallback icon */}
-          <View
-            className="mb-4 h-24 w-24 overflow-hidden rounded-full bg-[#157196] items-center justify-center">
+          <View className="mb-4 h-24 w-24 overflow-hidden rounded-full bg-[#157196] items-center justify-center">
             {userName ? (
               <Text style={{ fontSize: 32, fontWeight: '700', color: '#fff' }}>
                 {getInitials(userName)}
@@ -184,7 +174,6 @@ export default function Support() {
 
         {/* Form Section */}
         <View className="px-5">
-          {/* Ticket Category */}
           <Dropdown
             label="Ticket Category *"
             placeholder="Select a category"
@@ -248,9 +237,8 @@ export default function Support() {
             />
           </View>
 
-          {/* Submit Button */}
           <TouchBtn
-            onPress={handleSubmit}
+            onPress={() => { handleSubmit() }}
             label="Submit"
             icon={<Ionicons name="paper-plane-outline" size={16} color="white" />}
             textClassName="text-base font-semibold"
@@ -260,7 +248,6 @@ export default function Support() {
             isLoading={isSubmitting}
           />
 
-          {/* Chat with Us Button */}
           <TouchBtn
             onPress={() => navigateTo('message')}
             label="Chat with Us"

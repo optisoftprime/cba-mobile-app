@@ -244,6 +244,7 @@ export default function AllTransactions() {
                 startDate: formatDateParam(appliedStart),
                 endDate: formatDateParam(appliedEnd),
             });
+             console.log(JSON.stringify(response, null, 2));
             if (!response?.ok) throw new Error(response?.message);
             return response?.data?.data ?? [];
         },

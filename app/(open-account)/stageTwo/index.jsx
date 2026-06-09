@@ -90,7 +90,7 @@ export default function IdentityVerification() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.8,
-      base64: true, // ✅ Expo returns base64 directly — no FileSystem read needed
+      base64: true,
     });
 
     if (!result.canceled) {
@@ -104,18 +104,16 @@ export default function IdentityVerification() {
   };
 
   // ─── Gallery ───────────────────────────────────────────────────────────────
+  // NOTE: No permission request needed on Android 13+.
+  // launchImageLibraryAsync uses the system photo picker which requires no
+  // READ_MEDIA_IMAGES permission — removing requestMediaLibraryPermissionsAsync
+  // prevents Google Play from flagging restricted permissions in your build.
   const handleGallery = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission required', 'Gallery access is needed to select your ID.');
-      return;
-    }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.8,
-      base64: true, // ✅ Expo returns base64 directly — no FileSystem read needed
+      base64: true,
     });
 
     if (!result.canceled) {
@@ -163,11 +161,6 @@ export default function IdentityVerification() {
       password: params?.password,
       userName: params?.userName,
     };
-
-    // console.log('accountSetup payload (base64 truncated):', {
-    //   ...payload,
-    //   documentUrl: payload.documentUrl ? payload.documentUrl.slice(0, 60) + '...' : '',
-    // });
 
     const response = await accountSetup(payload);
     console.log(JSON.stringify(response, null, 2));

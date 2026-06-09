@@ -64,17 +64,11 @@ export default function UpgradeAccount() {
     return tierLevel(tier?.kycTierName) <= currentLevel;
   };
 
+  // NOTE: No permission request needed on Android 13+.
+  // launchImageLibraryAsync uses the system photo picker which requires no
+  // READ_MEDIA_IMAGES permission — removing requestMediaLibraryPermissionsAsync
+  // prevents Google Play from flagging restricted permissions in your build.
   const handlePickDocument = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Toast.show({
-        type: 'error',
-        text1: 'Permission Denied',
-        text2: 'Please allow access to your media library.',
-      });
-      return;
-    }
-
     const required = selectedTier?.requiredDocuments ?? 1;
     const remaining = required - documents.length;
 
@@ -110,7 +104,6 @@ export default function UpgradeAccount() {
       setDocuments((prev) => [...prev, ...picked]);
     }
 
-    const newTotal = documents.length + picked.length;
     if (result.assets.length > remaining) {
       Toast.show({
         type: 'info',
@@ -354,7 +347,7 @@ export default function UpgradeAccount() {
               No KYC tiers available
             </Text>
             <Text className="mt-1 text-center text-sm text-gray-400">
-              Your organization has not configured any upgrade tiers yet.
+              Sorry Your organization has not configured any upgrade tiers yet.
             </Text>
           </View>
         ) : (
@@ -389,7 +382,7 @@ export default function UpgradeAccount() {
                     </Text>
                   )}
                   <Text className="mt-1 text-xs text-gray-400">
-                    {tier?.requiredDocuments} document{tier?.requiredDocuments > 1 ? 's' : ''} required
+                    {tier?.requiredDocuments} Document{tier?.requiredDocuments > 1 ? 's' : ''} required
                   </Text>
                 </View>
 
